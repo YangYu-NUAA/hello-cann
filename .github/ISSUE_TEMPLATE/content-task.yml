@@ -1,0 +1,34 @@
+name: 课程内容任务
+description: 提议新增或完善一节课程内容
+title: "[Content] "
+labels: ["content"]
+body:
+  - type: input
+    id: chapter
+    attributes:
+      label: 章节
+      placeholder: "例如 docs/zh/01_inference"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 任务内容
+      description: 写清楚要补哪篇教程、代码或案例。
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: 计划验证环境
+      description: 硬件、系统、CANN、PyTorch、torch_npu 等版本。
+    validations:
+      required: false
+  - type: textarea
+    id: output
+    attributes:
+      label: 预期产出
+      placeholder: "文档、脚本、截图、profile 结果、性能表等"
+    validations:
+      required: true
+
