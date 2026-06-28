@@ -8,12 +8,25 @@
 
 ## 1. 检查环境
 
-先确认 CANN 环境已经生效。不同机器的安装路径可能不一样，下面只写最常见的形式：
+推理章只做运行前确认，不在这里安装或修复 CANN。先看 NPU 是否可见：
 
 ```bash
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
 npu-smi info
 ```
+
+再找一下当前环境里有没有 `set_env.sh`。有些容器的 `/usr/local/Ascend` 下面只有 `driver`，这时不要照着固定路径 `source`，先看 CANN Toolkit 实际装在哪里：
+
+```bash
+find /usr/local/Ascend ~/Ascend -name set_env.sh 2>/dev/null
+```
+
+如果能找到脚本，先加载它，例如：
+
+```bash
+source /path/to/set_env.sh
+```
+
+如果找不到脚本，但 Python 侧已经能正常导入 `torch_npu` 并使用 NPU，可以继续本章实验，同时把这个环境状态记录到环境清单里。如果 `torch_npu` 导入失败，先回到环境章处理。
 
 再确认 Python 侧能看到 PyTorch 和 `torch_npu`：
 
@@ -28,7 +41,7 @@ print("npu available:", hasattr(torch, "npu") and torch.npu.is_available())
 PY
 ```
 
-如果这里已经报错，先回到环境章处理。推理章默认这些基础检查已经通过。
+如果这里已经报错，先回到环境章处理。推理章默认 `npu-smi`、PyTorch 和 `torch_npu` 已经通过最小检查。
 
 ## 2. 安装依赖
 

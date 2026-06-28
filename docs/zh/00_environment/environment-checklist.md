@@ -32,6 +32,20 @@
 npu-smi info
 ```
 
+查找 CANN 环境脚本：
+
+```bash
+find /usr/local/Ascend ~/Ascend -name set_env.sh 2>/dev/null
+```
+
+如果 `/usr/local/Ascend` 下面只有 `driver`，说明当前路径里只能看到驱动，不代表 toolkit 一定装在这里。继续检查 `~/Ascend`、镜像文档或管理员提供的 CANN 安装路径。
+
+找到脚本后再加载：
+
+```bash
+source /path/to/set_env.sh
+```
+
 ```bash
 python - <<'PY'
 import torch
