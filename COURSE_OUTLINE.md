@@ -10,6 +10,8 @@ hello-cann 是一门面向昇腾 CANN 的实战课程。课程从一台可用的
 
 课程实操以单卡环境为准。多卡训练、tensor parallel 和 HCCL 放在软件栈说明、FAQ 和报错索引里。
 
+第一组实验环境固定为：IT22HMDA_4_S 双芯片昇腾卡，单芯片 64 GB HBM，总显存 128 GB；Ubuntu 20.04.5 LTS，kernel 5.10.0-182，aarch64；CANN 9.1.0；Python 3.11.4。当前 `torch_npu` 已安装，环境中还需要补齐 `libhccl.so` 和 Transformers。
+
 ## 组件出现位置
 
 第一阶段放一张软件栈关系图，说明各组件所在层次、使用场景和常见排障入口。
@@ -18,6 +20,7 @@ hello-cann 是一门面向昇腾 CANN 的实战课程。课程从一台可用的
 |:---|:---|:---|
 | 主线展开 | `torch_npu`、profiling、Ascend C、自定义算子接入 | 写步骤、代码、验证和排障 |
 | 章节穿插 | ACL / AscendCL、ATC / OM、GE / GraphEngine、HCCL | 在用到时讲清用途和常见问题 |
+| 应用接入 | vLLM-Ascend、MindIE、OpenAI 兼容接口、应用侧网关 | 放在推理服务和应用案例中 |
 | 进阶参考 | `cann-ops-adv`、MindSpeed、MindSpeed-LLM、MindSpore、DVPP / AIPP | 放参考资料、扩展阅读或第二阶段案例 |
 
 GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念、软件栈关系和常见报错索引里；`cann-ops-adv` 放在 Ascend C 之后，作为融合算子工程参考。
@@ -29,7 +32,9 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - 能完成一次 LoRA 微调，并保存训练日志、权重和验证结果。
 - 能用 profiling 工具找到模型推理或训练中的主要瓶颈。
 - 能写出一个基础 Ascend C 算子，理解 tiling、数据搬运和编译运行流程。
+- 能从 PyTorch 参考实现出发，完成 1-2 个 LLM 常用算子的 CANN 实现和对比。
 - 能把自定义算子接入模型链路，并用指标说明优化是否有效。
+- 能把部署在昇腾上的模型服务接入一个上层应用，记录端到端任务耗时。
 - 能整理一份可复现的实验记录，给别人复跑或评审。
 
 ## 仓库结构
@@ -40,8 +45,8 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 | `docs/zh/01_inference` | 模型推理与服务化 | Transformers、vLLM-Ascend、MindIE、benchmark |
 | `docs/zh/02_finetune` | 微调与训练 | 数据准备、单卡 LoRA、训练日志、权重验证 |
 | `docs/zh/03_profiling` | 性能分析 | profiling 工具、热点定位、显存、数据搬运和通信概念 |
-| `docs/zh/04_ascendc` | Ascend C 与自定义算子 | 基础算子、tiling、融合、调试、模型接入 |
-| `docs/zh/05_cases` | 贯穿案例 | Qwen 训推优化、视觉/多模态推理优化 |
+| `docs/zh/04_ascendc` | Ascend C 与自定义算子 | 基础算子、tiling、LLM 常用算子、调试、模型接入 |
+| `docs/zh/05_cases` | 贯穿案例 | Qwen 训推优化、应用项目接入 |
 | `docs/zh/06_reference` | 资料与排障 | 版本矩阵、FAQ、术语表、组件索引、链接索引 |
 | `src/` | 示例代码 | 每章可运行代码、算子工程、脚本 |
 | `notebooks/` | 交互式教程 | 适合 notebook 展示的章节和练习 |
@@ -56,14 +61,14 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 | 02 Fine-tune | 微调与训练 | 会准备数据、跑 LoRA、保存权重并验证 | 训练脚本、日志模板、结果说明 |
 | 03 Profiling | 性能分析 | 会看 profile，能说清楚主要耗时在哪里 | profile 报告、热点算子记录 |
 | 04 Ascend C | 自定义算子 | 会写基础算子，并理解接入模型的流程 | 算子代码、编译脚本、正确性测试 |
-| 05 Cases | 综合案例 | 会把部署、训练、分析和优化合成一个项目 | 案例代码、优化报告、复现实验表 |
+| 05 Cases | 综合案例 | 会把部署、训练、分析、优化和应用接入合成一个项目 | 案例代码、优化报告、复现实验表 |
 | 06 Reference | 资料与 FAQ | 能快速查版本、术语、常见错误 | FAQ、术语表、组件索引、链接索引 |
 
 ## 详细章节
 
 ### 00. Environment：先把机器变成可教学环境
 
-这一章的目标很简单：读者照着做完，能判断自己的环境是否能继续往下走。
+跑完本章后，读者能判断自己的环境是否可以继续做后面的推理、微调和算子实验。
 
 - 00.1 昇腾硬件与软件栈速览：NPU、驱动、固件、CANN、`torch_npu`、ACL、ATC/OM、GE、HCCL 之间的关系。
 - 00.2 系统与硬件检查：`npu-smi info`、驱动版本、CANN 路径、设备权限。
@@ -73,6 +78,8 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - 00.6 常见问题：版本不匹配、找不到算子、环境变量丢失、`import torch_npu` 失败。
 
 首篇教程以版本表、检查命令、关键输出和几条真实排障经验为主。
+
+第一组实验先补齐两件事：`torch_npu` 导入时的 `libhccl.so` 问题，以及 Transformers 依赖安装。修好后再进入 Qwen 推理 baseline。
 
 ### 01. Inference：把第一个大模型服务跑起来
 
@@ -85,7 +92,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - 01.5 模型专题：优先用 Qwen 系列，后续再补 DeepSeek-R1-Distill、GLM、InternVL 或 Qwen-VL。
 - 01.6 benchmark 模板：固定 prompt、并发数、输出长度、吞吐、延迟和显存记录。
 
-有较充足的昇腾显存，可以安排两层模型：小模型用于快速验证，中等规模模型用于展示真实推理服务。教程里要说明两者用途，区分最小验证和完整服务体验。
+本课程准备两层模型：小模型用于快速验证，中等规模模型用于展示真实推理服务。
 
 ### 02. Fine-tune：从能推理到能改模型
 
@@ -98,7 +105,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - 02.5 权重合并与推理验证：训练后如何确认模型真的学到了东西。
 - 02.6 工具线选择：微调工具接入方式、训练脚本结构和结果验证。
 
-这一章优先写“在哪台机器、哪组版本、哪条命令跑过”。失败记录可以放进 FAQ，后续很有用。
+这一章会保留机器、版本、命令、日志和失败记录。
 
 ### 03. Profiling：让读者看懂模型为什么慢
 
@@ -124,9 +131,10 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - 04.5 自定义算子工程化：目录结构、编译脚本、单元测试、正确性校验。
 - 04.6 接入 PyTorch / `torch_npu`：从最小调用到模型链路中的替换。
 - 04.7 调试与性能优化：profile、边界 case、精度误差、性能回退。
-- 04.8 融合算子参考：选择性阅读 `cann-ops-adv` 中的实现，看工程结构和优化思路。
+- 04.8 LLM 常用算子的 CANN 实现：从 PyTorch 参考实现出发，完成 RMSNorm、Softmax 或 SiLU / SwiGLU 中的 1-2 个。
+- 04.9 融合算子参考：选择性阅读 `cann-ops-adv` 中的实现，看工程结构和优化思路。
 
-这部分是 hello-cann 和普通大模型教程拉开差异的地方。写法要慢一点，先把一件小事跑透，再讲为什么这么写。
+`llm-algo-leetcode` 中的 PyTorch、Triton 和 CUDA 题目可以作为素材来源。hello-cann 不写 CUDA 课，只借用题目结构、正确性测试和性能记录方式，改成 Ascend C 的实现路径。
 
 ### 05. Cases：把教程变成项目
 
@@ -144,6 +152,15 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 拓展案例可以选视觉、视频或多模态模型。第一阶段先准备统一的性能记录模板，后续继续补完整实验。
 
+应用项目接入放在 Qwen 主线之后：
+
+- 昇腾模型服务：用本课程部署的 Qwen 服务，或单位内网已有的昇腾模型服务。
+- 接口形式：优先使用 OpenAI 兼容接口，记录 `base_url`、`model`、streaming、超时和并发设置。
+- `hello-agent`：验证 agent 任务能否接入昇腾模型服务，记录一次任务中的模型调用次数和总耗时。
+- `hello-claw`：验证 OpenClaw / Skill 类应用如何切换到昇腾模型服务。
+- `torch-rechub` / `rechub`：记录推荐模型在 CANN 上的训练、推理和 profiling；后续再接 LLM 解释或运营文案生成。
+- 应用指标：首 token 延迟、任务总耗时、并发 1 / 4 / 8 下的成功率、错误类型和日志。
+
 ### 06. Reference：资料、术语与排障索引
 
 这一章负责把分散信息变成能查的东西。
@@ -153,7 +170,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - 常见错误：安装、运行时、模型加载、算子、HCCL、显存、权限。
 - 组件索引：`torch_npu`、ACL、ATC/OM、GE、HCCL、`cann-ops-adv`、MindSpeed。
 - 术语表：NPU、AI Core、AICPU、ACL、OM、GE、HCCL、tiling、workspace。
-- 社区项目：vLLM-Ascend、Ascend/pytorch、Ascend samples、ModelZoo。
+- 社区项目：vLLM-Ascend、Ascend/pytorch、Ascend samples、ModelZoo、hello-agent、hello-claw、llm-algo-leetcode、torch-rechub。
 
 ## 参考链接
 
@@ -163,3 +180,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - vLLM-Ascend：https://github.com/vllm-project/vllm-ascend
 - Ascend samples：https://github.com/Ascend/samples
 - Ascend ModelZoo-PyTorch：https://github.com/Ascend/ModelZoo-PyTorch
+- hello-agent：https://github.com/datawhalechina/hello-agent
+- hello-claw：https://github.com/datawhalechina/hello-claw
+- llm-algo-leetcode：https://github.com/datawhalechina/llm-algo-leetcode
+- torch-rechub：https://github.com/datawhalechina/torch-rechub

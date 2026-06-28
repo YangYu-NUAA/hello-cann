@@ -10,8 +10,8 @@
 | [01 Inference](01_inference/index.md) | 模型推理与服务化 |
 | [02 Fine-tune](02_finetune/index.md) | 单卡 LoRA 微调 |
 | [03 Profiling](03_profiling/index.md) | 性能分析与瓶颈定位 |
-| [04 Ascend C](04_ascendc/index.md) | Ascend C 与自定义算子 |
-| [05 Cases](05_cases/index.md) | Qwen 贯穿案例 |
+| [04 Ascend C](04_ascendc/index.md) | Ascend C、自定义算子和 LLM 常用算子 |
+| [05 Cases](05_cases/index.md) | Qwen 贯穿案例和应用项目接入 |
 | [06 Reference](06_reference/index.md) | FAQ、术语和组件索引 |
 
 ## 主线案例
@@ -24,5 +24,6 @@
 4. 完成单卡 LoRA 微调。
 5. 用 profiling 定位热点。
 6. 写一个 Ascend C 基础算子。
-7. 接入模型链路并做正确性和性能对比。
-
+7. 实现一个 LLM 常用算子的 CANN 版本。
+8. 接入模型链路并做正确性和性能对比。
+9. 把昇腾模型服务接入一个上层应用，记录端到端任务耗时。

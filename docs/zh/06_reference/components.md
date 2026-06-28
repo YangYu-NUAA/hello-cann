@@ -8,7 +8,8 @@
 | GE / GraphEngine | 图编译和图优化背景 | 知道位置和常见问题，不做源码讲解 |
 | HCCL | 通信概念、FAQ、报错索引 | 说明多卡场景中的位置，不进入必做实操 |
 | Ascend C | 算子开发 | 主线内容，写代码、编译、运行和验证 |
+| LLM 常用算子 | Ascend C、Qwen 案例 | 从 PyTorch 参考实现到 CANN 实现，做正确性和性能对比 |
 | `cann-ops-adv` | Ascend C 后续阅读 | 看工程结构和融合算子思路 |
 | MindIE | 推理服务 | 根据公开获取方式和实测结果决定深度 |
+| OpenAI 兼容接口 | 推理服务、应用项目 | 作为上层应用接入昇腾模型服务的统一入口 |
 | MindSpeed / MindSpeed-LLM | 进阶训练 | 第一阶段作为参考资料 |
-
