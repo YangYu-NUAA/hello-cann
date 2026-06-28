@@ -7,5 +7,5 @@
 | 文档 | 内容 |
 |:---|:---|
 | [qwen-optimization.md](qwen-optimization.md) | Qwen 系列模型训推与算子优化 |
+| [application-projects.md](application-projects.md) | 昇腾模型服务接入应用项目 |
 | [case-report-template.md](case-report-template.md) | 案例报告模板 |
-

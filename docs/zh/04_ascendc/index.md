@@ -8,5 +8,5 @@
 |:---|:---|
 | [vector-add.md](vector-add.md) | Vector Add 入门 |
 | [operator-template.md](operator-template.md) | 算子工程模板 |
+| [llm-operators.md](llm-operators.md) | LLM 常用算子的 CANN 实现 |
 | [model-integration.md](model-integration.md) | 接入模型链路 |
-

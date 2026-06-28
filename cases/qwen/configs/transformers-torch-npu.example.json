@@ -1,0 +1,9 @@
+{
+  "model": "/data/models/Qwen2.5-0.5B-Instruct",
+  "device": "npu:0",
+  "prompt": "请用三句话介绍昇腾 CANN。",
+  "max_new_tokens": 128,
+  "warmup": 1,
+  "repeat": 3,
+  "dtype": "auto"
+}

@@ -4,22 +4,26 @@
 
 | 项目 | 版本或说明 |
 |:---|:---|
-| 硬件 |  |
-| 系统 |  |
-| 驱动与固件 |  |
-| CANN |  |
-| Python |  |
-| PyTorch |  |
-| torch_npu |  |
+| 硬件 | IT22HMDA_4_S（2 芯片），64 GB HBM/芯片，共 128 GB |
+| 系统 | Ubuntu 20.04.5 LTS，kernel 5.10.0-182（aarch64） |
+| 驱动 | 25.5.1（Innerversion: V100R001C23SPC006B220） |
+| 固件 | 不支持查询 |
+| CANN | 9.1.0（`~/Ascend/cann-9.1.0/`，PATH 中已包含） |
+| Python | 3.11.4 |
+| PyTorch | torch 2.7.1+cpu |
+| torch_npu | 2.7.1.post2.dev20251226（当前缺 `libhccl.so`） |
+| Transformers | 未安装 |
 
 ## 检查项
 
 - [ ] `npu-smi info` 能看到 NPU。
 - [ ] CANN Toolkit 路径存在。
 - [ ] `set_env.sh` 已加载。
+- [ ] `libhccl.so` 可以被动态链接器找到。
 - [ ] Python 环境可用。
 - [ ] PyTorch 可导入。
 - [ ] `torch_npu` 可导入。
+- [ ] Transformers 已安装。
 - [ ] 最小 NPU 张量计算能运行。
 
 ## 常用命令
@@ -39,3 +43,26 @@ print("npu available:", torch.npu.is_available())
 PY
 ```
 
+排查 `libhccl.so`：
+
+```bash
+find ~/Ascend/cann-9.1.0 -name 'libhccl.so*'
+```
+
+```bash
+python - <<'PY'
+import ctypes.util
+
+print(ctypes.util.find_library("hccl"))
+PY
+```
+
+安装 Transformers 后记录版本：
+
+```bash
+python - <<'PY'
+import transformers
+
+print(transformers.__version__)
+PY
+```
