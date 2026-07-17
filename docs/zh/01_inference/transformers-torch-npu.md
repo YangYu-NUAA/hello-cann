@@ -67,7 +67,7 @@ pip install transformers accelerate safetensors sentencepiece
 Qwen/Qwen2.5-0.5B-Instruct
 ```
 
-显存比较充足时，可以换成更大的同系列模型。第一次跑课程时，先不要急着换大模型，先把命令、输出和记录文件跑通。
+链路稳定后，可以换成更大的同系列模型。第一次跑课程时，先不要急着换大模型，先把命令、输出和记录文件跑通。
 
 ## 4. 运行脚本
 

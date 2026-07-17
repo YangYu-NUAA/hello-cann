@@ -1,0 +1,15 @@
+{
+  "model": "/data/models/Qwen2.5-0.5B-Instruct",
+  "device": "npu:0",
+  "dtype": "bfloat16",
+  "max_new_tokens": 128,
+  "warmup": 1,
+  "repeat": 3,
+  "concurrency": [1, 2, 4],
+  "prompts": [
+    "请用三句话介绍昇腾 CANN。",
+    "用 Python 写一个快速排序，并解释时间复杂度。",
+    "请把以下这段话改写成更正式的商务口吻：咱们这个产品挺好的，买的人挺多，用起来也方便，售后也不用操心。"
+  ],
+  "do_sample": false
+}

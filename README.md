@@ -50,17 +50,17 @@ hello-cann/
 
 ## 当前阶段
 
-第一阶段先完成课程骨架和 Qwen 主线案例：
+第一阶段先把 Qwen 主线跑稳。服务器实验按“先能复现，再补优化”的顺序推进：
 
 - 环境检查：`npu-smi`、CANN、`torch_npu`、Docker。
 - 快速推理：Transformers + `torch_npu` 跑通 Qwen 小模型。
-- 服务化推理：vLLM-Ascend 或 MindIE 启动 OpenAI 兼容接口。
-- 单卡微调：Qwen LoRA，记录训练日志、显存占用和验证结果。
-- 性能分析：用 profiling 找到推理链路中的主要耗时。
-- 算子开发：从 Vector Add 进入 Ascend C，再尝试接入模型链路。
-- LLM 常用算子：从 PyTorch 参考实现出发，完成 1-2 个 CANN 版本并做对比。
-- 应用接入：把昇腾模型服务接入 `hello-agent`、`hello-claw` 或 `torch-rechub`。
-- 案例报告：整理版本、命令、指标、问题和优化前后对比。
+- 基线记录：固定 prompt、输出长度和版本，留下 JSON 结果。
+- 单卡微调：Qwen LoRA 先做 smoke test，再补完整训练记录。
+- 性能分析：用同一条推理命令采集 profile，整理热点表。
+- 算子开发：先编译和验证 Vector Add，再选择一个 LLM 常用算子继续做。
+- 服务化推理：vLLM-Ascend 或 MindIE 二选一跑通 OpenAI 兼容接口。
+- 应用接入：模型服务稳定后，再接 `hello-agent`、`hello-claw` 或 `torch-rechub`。
+- 案例报告：整理版本、命令、指标、问题和可复现步骤。
 
 ## 文档写法
 
@@ -83,7 +83,7 @@ hello-cann/
 - 某个 CANN / `torch_npu` 版本组合的环境记录。
 - Qwen 推理、LoRA、profiling 的复现实验。
 - Ascend C 基础算子或调试记录。
-- LLM 常用算子的 CANN 实现、正确性测试和性能记录。
+- 一个 LLM 常用算子的 CANN 实现、正确性测试和性能记录。
 - 昇腾模型服务接入上层应用的实验记录。
 - FAQ、错误日志和排查路径。
 - 案例报告和性能记录表。
