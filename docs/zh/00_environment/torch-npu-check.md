@@ -40,3 +40,17 @@ PY
 - 脚本没有报错。
 - 输出中能看到 `npu` 设备。
 - `y.cpu()` 的结果为全 2 张量。
+
+## 本次实测
+
+```text
+torch: 2.7.1+cpu
+torch_npu: 2.7.1.post2.dev20251226
+npu available: True
+npu count: 2
+device: npu:0
+tensor([[2., 2., 2.],
+        [2., 2., 2.]])
+```
+
+导入时出现了一条 `libop_plugin_atb.so` 文件所有者不一致的警告，但没有影响 `torch_npu` 导入和张量计算。本章先记录该警告，不把它当作运行失败。

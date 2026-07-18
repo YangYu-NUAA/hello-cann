@@ -12,7 +12,7 @@
 |:---|:---|
 | 硬件 | IT22HMDA_4_S（2 芯片），64 GB HBM/芯片 |
 | 系统 | Ubuntu 20.04.5 LTS，aarch64 |
-| CANN | 9.1.0 |
+| CANN | 9.0.0 |
 | Python | 3.11.4 |
 | PyTorch | 2.7.1+cpu |
 | torch_npu | 2.7.1.post2.dev20251226 |
@@ -164,7 +164,7 @@ cases/qwen/reports/lora-sft-template.md
 
 ### `torch.npu is not available`
 
-先回到环境章，确认 CANN 环境变量、`libhccl.so` 和 `torch_npu`。
+先回到环境章，确认 CANN 环境变量、`libhccl.so` 动态链接检查和 `torch_npu` 最小张量校验。
 
 ### 显存不足
 

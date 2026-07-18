@@ -28,13 +28,13 @@ hello-cann 是一门面向昇腾 CANN 的实战课程。课程从一台可用的
 | 昇腾卡型号 | IT22HMDA_4_S（2 芯片） |
 | 单芯片显存 | 64 GB HBM（共 128 GB） |
 | 操作系统 | Ubuntu 20.04.5 LTS，kernel 5.10.0-182（aarch64） |
-| 驱动版本 | 25.5.1（Innerversion: V100R001C23SPC006B220） |
-| 固件版本 | 不支持查询 |
-| CANN 版本 | 9.1.0（`~/Ascend/cann-9.1.0/`，PATH 中已包含） |
+| 驱动版本 | 25.5.5（Innerversion: V100R001C23SPC009B220） |
+| 固件版本 | `npu-smi` 返回 `NA` |
+| CANN 版本 | 9.0.0（`~/Ascend/cann-9.0.0/`） |
 | Python 版本 | 3.11.4 |
-| PyTorch / torch_npu | torch 2.7.1+cpu / torch_npu 2.7.1.post2.dev20251226（当前缺 `libhccl.so`） |
+| PyTorch / torch_npu | torch 2.7.1+cpu / torch_npu 2.7.1.post2.dev20251226 |
 
-第一组实验先解决两个阻塞：`torch_npu` 导入时的 `libhccl.so` 问题，以及 Transformers 依赖安装。修好后再进入 Qwen 推理 baseline。
+00 章已经完成实测：HCCL 动态库可用，`torch_npu` 能识别 2 个 NPU，最小张量计算通过。Transformers 在 01 章安装。
 
 ### 第一轮实验边界
 
@@ -122,7 +122,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 **00.2 系统与硬件检查**
 - 学习目标：用 `npu-smi info`、驱动版本、CANN 路径、设备权限判断机器状态。
-- 主要产出：`environment-checklist.md`（已有，需补真实输出截图）。
+- 主要产出：`environment-checklist.md` 和 `src/00_environment/check_environment.sh`。
 - 前置依赖：00.1。
 - 验证方式：勾选清单全部通过。
 
@@ -130,19 +130,19 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - 学习目标：理解 Toolkit、Kernel、`set_env.sh` 的关系，能处理多版本切换。
 - 主要产出：`install-cann.md`（新增）。
 - 前置依赖：00.2。
-- 验证方式：按实际路径加载 CANN 环境变量，或确认镜像已经预置；`python -c "import acl"` 成功。
+- 验证方式：按实际路径加载 CANN 环境变量，或确认镜像已经预置；能读到 `ASCEND_HOME_PATH` 和安装版本信息。
 - 写作要点：覆盖「`/usr/local/Ascend` 下只有 driver」的常见容器场景，给出 `find /usr/local/Ascend ~/Ascend -name set_env.sh` 的排查路径。
 
 **00.4 Python 环境与 torch_npu 验证**
 - 学习目标：安装并验证 PyTorch + `torch_npu`，跑通最小 NPU 张量计算。
-- 主要产出：`torch-npu-check.md`（已有，需补 libhccl.so 排障）。
+- 主要产出：`torch-npu-check.md` 和环境检查脚本。
 - 前置依赖：00.3。
 - 验证方式：`torch.ones((2,3), device="npu")` 不报错。
-- 排障重点：`libhccl.so` 找不到的完整修复路径（`find ~/Ascend/cann-9.1.0 -name 'libhccl.so*'` → 设置 `LD_LIBRARY_PATH`）。
+- 排障重点：`libhccl.so` 查找、动态链接检查、`torch_npu` 导入错误和版本不匹配。
 
-**00.5 Docker 使用**
-- 学习目标：用官方昇腾镜像起一个可复现的开发环境。
-- 主要产出：`docker.md`（待实测后补完整命令）。
+**00.5 Docker 使用（选做）**
+- 学习目标：确认平台是否提供 Docker；具备条件时再使用昇腾镜像复现实验。
+- 主要产出：`docker.md`。
 - 前置依赖：00.3。
 - 验证方式：容器内能跑通 00.4 的校验脚本。
 - 写作要点：镜像选择、`--device /dev/davinci0` 挂载、数据目录、权限问题。
@@ -156,7 +156,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 > **00 章验收清单（嵌 index.md）**
 > - [ ] 能用 `npu-smi info` 看到 NPU 并读懂输出。
 > - [ ] 已按实际路径加载 CANN 环境变量，或确认镜像已预置；`python -c "import torch_npu"` 不报错。
-> - [ ] `libhccl.so` 问题已解决（或记录了规避方式）。
+> - [ ] `libhccl.so` 可以被动态链接器找到；如果失败，已记录实际路径和环境变量。
 > - [ ] 跑通最小 NPU 张量校验脚本，输出全 2 张量。
 > - [ ] 已记录本机硬件、驱动、CANN、Python、PyTorch、torch_npu 版本到环境表。
 > - [ ] 有一张能解释软件栈层次的关系图。
@@ -362,7 +362,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - 学习目标：从最小调用到模型链路中的算子替换。
 - 主要产出：`model-integration.md`（待算子实测后补）。
 - 关键技术：aclnn 调用、Python/C++ 封装、正确性测试；需要反向传播时再补 autograd。
-- 写作边界：具体接入方式以当前 CANN 9.1.0 环境实测结果为准，不提前承诺未验证 API。
+- 写作边界：具体接入方式以当前 CANN 9.0.0 环境实测结果为准，不提前承诺未验证 API。
 
 **04.8 LLM 常用算子的 CANN 实现**
 - 学习目标：从 PyTorch 参考实现出发，先完成 RMSNorm、Softmax 或 SiLU/SwiGLU 中的一个，再按实验进展扩展。
