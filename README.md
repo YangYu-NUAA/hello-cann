@@ -6,7 +6,7 @@ hello-cann 是一门面向昇腾 CANN 的开源实战课程。
 
 课程实操以单卡环境为准。多卡训练、tensor parallel 和 HCCL 放在软件栈说明、FAQ 和报错索引里，不影响主线学习。
 
-第一组实验环境固定在一台 IT22HMDA_4_S 双芯片昇腾机器上，总显存 128 GB，系统为 Ubuntu 20.04.5 LTS aarch64，CANN 版本为 9.1.0，Python 版本为 3.11.4。
+第一组实验环境固定在一台 IT22HMDA_4_S 双芯片昇腾机器上，总显存 128 GB，系统为 Ubuntu 20.04.5 LTS aarch64，驱动版本为 25.5.5，CANN 版本为 9.0.0，Python 版本为 3.11.4。
 
 ## 适合谁
 
@@ -52,7 +52,7 @@ hello-cann/
 
 第一阶段先把 Qwen 主线跑稳。服务器实验按“先能复现，再补优化”的顺序推进：
 
-- 环境检查：`npu-smi`、CANN、`torch_npu`、Docker。
+- 环境检查：`npu-smi`、驱动、CANN、HCCL 和 `torch_npu`；Docker 按平台条件选做。
 - 快速推理：Transformers + `torch_npu` 跑通 Qwen 小模型。
 - 基线记录：固定 prompt、输出长度和版本，留下 JSON 结果。
 - 单卡微调：Qwen LoRA 先做 smoke test，再补完整训练记录。

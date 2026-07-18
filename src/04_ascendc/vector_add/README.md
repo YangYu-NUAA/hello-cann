@@ -15,7 +15,7 @@ vector_add/
 
 ## 编译
 
-前置条件：CANN 8.3 及以上（课程环境 CANN 9.1.0 满足）。
+前置条件：CANN 8.3 及以上（课程环境 CANN 9.0.0 满足）。
 
 先找到 CANN Toolkit 的实际路径：
 
@@ -49,7 +49,7 @@ y = torch.randn(8 * 2048, dtype=torch.float16, device="npu")
 z_ref = x + y
 ```
 
-自定义算子的安装、aclnn 调用和 PyTorch 侧封装，需要结合 CANN 9.1.0 实测产物补到：
+自定义算子的安装、aclnn 调用和 PyTorch 侧封装，需要结合 CANN 9.0.0 实测产物补到：
 - `docs/zh/04_ascendc/vector-add.md`（本算子教程）
 - `docs/zh/04_ascendc/model-integration.md`（接入 PyTorch）
 
