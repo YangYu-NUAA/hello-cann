@@ -8,10 +8,10 @@
 {"instruction": "请介绍 CANN。", "input": "", "output": "CANN 是昇腾 AI 处理器的软件栈。"}
 ```
 
-## 待补内容
+## 第一轮记录
 
-- Alpaca 格式。
-- ShareGPT 格式。
-- 训练集和验证集切分。
-- 数据检查脚本。
-
+- 使用 Alpaca 三字段格式：`instruction`、`input`、`output`。
+- 先用 `cases/qwen/datasets/huanhuan-100.json` 验证流程。
+- tokenizer 侧使用模型自带 chat template。
+- prompt 部分在 label 中写成 `-100`，只让回答部分参与 loss 计算。
+- 训练集和验证集切分在完整训练前再补；第一轮 smoke test 先使用全量小样例。

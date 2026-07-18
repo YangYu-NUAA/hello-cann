@@ -44,6 +44,8 @@ cases/qwen/results/
 cases/qwen/reports/inference-baseline-template.md
 ```
 
+`cases/qwen/scripts/benchmark.py` 主要用于本地推理基线。脚本里的并发测试是主机侧同时发起多次生成请求，用来观察本地调用的变化，不等同于 vLLM-Ascend 或 MindIE 的服务化压测。服务化章节会单独记录接口延迟、吞吐和首 token 时间。
+
 ## 备注
 
 - 不同模型、输入长度、并发数之间不要直接比较。

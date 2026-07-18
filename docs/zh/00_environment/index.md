@@ -31,4 +31,4 @@
 |:---|:---|
 | [environment-checklist.md](environment-checklist.md) | 环境检查清单 |
 | [torch-npu-check.md](torch-npu-check.md) | PyTorch + `torch_npu` 最小校验 |
-| [docker.md](docker.md) | Docker 使用占位 |
+| [docker.md](docker.md) | Docker 使用 |
