@@ -8,6 +8,7 @@ import json
 import platform
 import statistics
 import time
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -170,13 +171,16 @@ def ensure_npu_available(device: str) -> torch.device:
 def build_inputs(tokenizer: Any, prompt: str, device: torch.device) -> dict[str, Any]:
     messages = [{"role": "user", "content": prompt}]
     if getattr(tokenizer, "chat_template", None):
-        input_ids = tokenizer.apply_chat_template(
+        encoded = tokenizer.apply_chat_template(
             messages,
             tokenize=True,
             add_generation_prompt=True,
             return_tensors="pt",
         )
-        inputs = {"input_ids": input_ids}
+        if isinstance(encoded, Mapping):
+            inputs = dict(encoded)
+        else:
+            inputs = {"input_ids": encoded}
     else:
         inputs = tokenizer(prompt, return_tensors="pt")
     return {key: value.to(device) for key, value in inputs.items()}
