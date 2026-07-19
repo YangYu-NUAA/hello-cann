@@ -1,34 +1,22 @@
 # 01. 模型推理与服务化
 
-本章先跑通一个 Qwen 小模型的文本生成，再把输入长度、输出长度、耗时、显存和环境版本记录下来。后面的 profiling、算子开发、优化案例和应用接入都会复用这份 baseline。
+本章使用 Qwen2.5-0.5B-Instruct 完成单卡推理，记录模型版本、输入输出、耗时和显存。03 章会复用同一条命令采集 profile。
 
-第一版实验以单卡为主。多卡部署、HCCL 通信等内容会在参考材料里轻量介绍，不作为本章必须完成的实操。
+多卡部署和 HCCL 不在本章安排实操。
 
-## 学习顺序
+## 章节内容
 
-| 文档 | 内容 |
-|:---|:---|
-| [transformers-torch-npu.md](transformers-torch-npu.md) | 使用 Transformers 和 `torch_npu` 跑通一次文本生成 |
-| [benchmark.md](benchmark.md) | 记录一次推理实验的输入、输出和性能数据 |
-| [vllm-ascend.md](vllm-ascend.md) | 把模型放到服务化推理框架里 |
-| [mindie.md](mindie.md) | MindIE 相关内容 |
+| 文档 | 内容 | 状态 |
+|:---|:---|:---|
+| [transformers-torch-npu.md](transformers-torch-npu.md) | 使用 Transformers 和 `torch_npu` 运行 Qwen | 已实测 |
+| [benchmark.md](benchmark.md) | 记录推理延迟、吞吐和显存 | 待补标准测试 |
+| [vllm-ascend.md](vllm-ascend.md) | 部署 OpenAI 兼容服务 | 待实测 |
+| [mindie.md](mindie.md) | 使用 MindIE 部署模型 | 待确认版本和获取方式 |
 
-## 本章闭环
+代码和配置放在 `cases/qwen/`。脚本生成的 JSON 默认写入 `cases/qwen/results/`，整理后的实验记录放在 `cases/qwen/reports/`。
 
-```text
-检查环境 -> 加载模型 -> 运行生成 -> 保存结果 -> 记录 baseline -> 服务化接口
-```
+## 已完成实验
 
-配套代码放在：
+2026 年 7 月 19 日，Transformers 推理在 IT22HMDA_4_S、CANN 9.0.0 环境通过。使用 Qwen2.5-0.5B-Instruct 生成 32 tokens，单次耗时 1.02937 秒，峰值分配显存 971.52 MB。
 
-```text
-cases/qwen/scripts/run_transformers_torch_npu.py
-```
-
-实验结果默认写入：
-
-```text
-cases/qwen/results/
-```
-
-后续章节会继续使用这份结果做 profiling 和优化前后对比。模型服务跑稳后，也会作为 `hello-agent`、`hello-claw` 等应用项目的后端模型。
+这组数据来自 `warmup=0`、`repeat=1` 的运行检查，只说明脚本可以运行，不作为正式性能结论。完整记录见 [inference-baseline-it22hmda.md](../../../cases/qwen/reports/inference-baseline-it22hmda.md)。

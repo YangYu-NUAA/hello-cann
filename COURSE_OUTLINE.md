@@ -1,6 +1,6 @@
 # hello-cann 课程大纲
 
-这份大纲记录 hello-cann 第一版课程的主线、产出和验收方式。每节都会尽量写清楚要做什么、做到什么程度、最后留下哪些结果，方便后续逐章实验和补正文。
+这份大纲记录 hello-cann 第一版课程的章节、实验、产出和验收方式。
 
 大纲会随着机器环境、模型选择和案例验证继续调整，调整时请同步更新本文件，而不是只改章节正文。
 
@@ -17,7 +17,7 @@ hello-cann 是一门面向昇腾 CANN 的实战课程。课程从一台可用的
 ### 课程特点
 
 - 每章都围绕可复现实验展开，命令、版本、输出和问题记录要能留在仓库里。
-- 推理、微调、profiling、算子开发尽量使用同一条 Qwen 主线，减少读者在不同案例之间来回切换。
+- 推理、微调、profiling 和算子开发使用同一套 Qwen 案例与实验记录。
 - 多卡训练、tensor parallel 和 HCCL 先放在概念说明和排障索引里，不作为第一版必做实验。
 - Ascend C 先跑通 Vector Add，再选择一个 LLM 常用算子做正确性和性能对比；其余算子作为扩展材料逐步补。
 
@@ -34,14 +34,14 @@ hello-cann 是一门面向昇腾 CANN 的实战课程。课程从一台可用的
 | Python 版本 | 3.11.4 |
 | PyTorch / torch_npu | torch 2.7.1+cpu / torch_npu 2.7.1.post2.dev20251226 |
 
-00 章已经完成实测：HCCL 动态库可用，`torch_npu` 能识别 2 个 NPU，最小张量计算通过。Transformers 在 01 章安装。
+00 章已经完成实测：HCCL 动态库可用，`torch_npu` 能识别 2 个 NPU，最小张量计算通过。01.1 已经使用 Transformers 5.14.1 和 Qwen2.5-0.5B-Instruct 完成单卡推理，JSON 结果正常写入。
 
 ### 第一轮实验边界
 
-第一轮服务器实验先做最小闭环：
+第一轮服务器实验包括：
 
 1. 环境检查：`npu-smi`、CANN 路径、`torch_npu` 导入、最小 NPU 张量。
-2. 推理 baseline：Transformers + `torch_npu` 跑通 Qwen2.5-0.5B，保存 JSON。
+2. 推理 baseline：Transformers + `torch_npu` 跑通 Qwen2.5-0.5B，保存 JSON。（已完成运行检查）
 3. 本地 benchmark：只记录 `concurrency=1` 的基础吞吐、延迟和显存。
 4. profiling：用同一条推理命令采集一次 profile，整理热点表。
 5. LoRA：用示例数据跑一个 smoke test，确认训练、保存和合并流程。
@@ -109,7 +109,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 ## 详细章节
 
-### 00. Environment：先把机器变成可教学环境
+### 00. Environment：环境与版本基线
 
 > **验收目标**：跑完本章后，读者能判断自己的环境是否可以继续做后面的推理、微调和算子实验，并跑通最小 NPU 张量校验。
 
@@ -163,19 +163,20 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 ---
 
-### 01. Inference：把第一个大模型服务跑起来
+### 01. Inference：模型推理与服务化
 
-> **验收目标**：从命令行走到稳定 OpenAI 兼容服务，并留下可被 profiling 章复用的 baseline。
+> **验收目标**：完成单卡模型推理和一种服务化部署，保存 profiling 章需要的 baseline。
 
 **目录布局（主线集中 + 扩展按模型）**：
 - `docs/zh/01_inference/` 放 Qwen 主线（transformers / vllm / mindie / benchmark）。
 - 扩展模型（DeepSeek-R1-Distill、GLM、InternVL、Qwen-VL）放 `cases/<model>/`，索引挂在本章 index。
 
-**01.1 Transformers + torch_npu 最小推理**（已有）
+**01.1 Transformers + torch_npu 最小推理**（已实测）
 - 学习目标：在昇腾 NPU 上跑一次 Qwen 文本生成，得到输出、JSON 记录、可复跑命令。
 - 主要产出：`transformers-torch-npu.md` + `cases/qwen/scripts/run_transformers_torch_npu.py`（已有，保留）。
 - 前置依赖：00 章验收通过。
 - 验证方式：脚本输出 `tokens_per_second` + JSON 落盘到 `cases/qwen/results/`。
+- 实测记录：`cases/qwen/reports/inference-baseline-it22hmda.md`。当前数据为 `warmup=0`、`repeat=1` 的运行检查，正式 benchmark 另行记录。
 
 **01.2 vLLM-Ascend 服务化部署**
 - 学习目标：启动 OpenAI 兼容服务，记录显存占用、并发能力。
@@ -212,11 +213,11 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - 写作要点：区分本地脚本 benchmark 和服务化 benchmark；没有可比实验时，直接记录本次数据，不强行下结论。
 
 > **01 章验收清单（嵌 index.md）**
-> - [ ] Transformers + torch_npu 跑通 Qwen 小模型，JSON 结果落盘。
+> - [x] Transformers + torch_npu 跑通 Qwen 小模型，JSON 结果落盘。
 > - [ ] vLLM-Ascend 或 MindIE 至少一个服务化方案能响应 OpenAI 兼容请求。
 > - [ ] 有一份 benchmark 表，字段齐全（模型/输入/batch/并发/吞吐/延迟/显存）。
-> - [ ] baseline 命令可被 03 profiling 章直接复用。
-> - [ ] 显存占用有真实数据，不是估计值。
+> - [x] baseline 命令可被 03 profiling 章直接复用。
+> - [x] 显存占用有真实数据，不是估计值。
 
 ---
 
@@ -388,7 +389,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 ---
 
-### 05. Cases：把教程变成项目
+### 05. Cases：综合案例
 
 > **验收目标**：把环境、推理、微调、profiling、算子开发和模型接入整理成可展示、可复跑、可继续改的完整项目。
 

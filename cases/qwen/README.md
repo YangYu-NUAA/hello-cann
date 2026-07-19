@@ -1,6 +1,6 @@
 # Qwen 主线案例
 
-本目录存放 Qwen 系列模型的推理、微调、benchmark、profiling 和算子优化案例。是 hello-cann 的主线案例工程。
+本目录存放 Qwen 系列模型的推理、微调、benchmark、profiling 和算子优化代码。
 
 ## 目录
 
@@ -29,17 +29,13 @@ cases/qwen/
 ### 1. Transformers + torch_npu 推理 baseline（01 章）
 
 ```bash
-python cases/qwen/scripts/run_transformers_torch_npu.py \
-  --model /data/models/Qwen2.5-0.5B-Instruct \
-  --prompt "请用三句话介绍昇腾 CANN。" \
-  --max-new-tokens 128 --warmup 1 --repeat 3
+export MODEL_PATH=/data/models/Qwen2.5-0.5B-Instruct && python cases/qwen/scripts/run_transformers_torch_npu.py --model "$MODEL_PATH" --local-files-only --prompt "请用三句话介绍昇腾 CANN。" --max-new-tokens 128 --warmup 1 --repeat 3
 ```
 
 或用配置文件：
 
 ```bash
-python cases/qwen/scripts/run_transformers_torch_npu.py \
-  --config cases/qwen/configs/transformers-torch-npu.example.json
+python cases/qwen/scripts/run_transformers_torch_npu.py --config cases/qwen/configs/transformers-torch-npu.example.json
 ```
 
 ### 2. 单卡 LoRA 微调（02 章）

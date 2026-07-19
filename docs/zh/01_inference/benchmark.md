@@ -1,6 +1,6 @@
 # 推理 benchmark 记录模板
 
-推理记录的重点不是把数字写得很好看，而是让下一次实验能复现。模型、输入长度、输出长度、batch、并发、版本只要有一个不同，结果就不能直接比较。
+模型、输入长度、输出长度、batch、并发和软件版本一致时，测试结果才适合放在一起比较。
 
 ## 最小记录
 
@@ -24,12 +24,7 @@
 Transformers 最小推理脚本会自动生成 JSON 记录：
 
 ```bash
-python cases/qwen/scripts/run_transformers_torch_npu.py \
-  --model /data/models/Qwen2.5-0.5B-Instruct \
-  --prompt "请用三句话介绍昇腾 CANN。" \
-  --max-new-tokens 128 \
-  --warmup 1 \
-  --repeat 3
+export MODEL_PATH=/data/models/Qwen2.5-0.5B-Instruct && python cases/qwen/scripts/run_transformers_torch_npu.py --model "$MODEL_PATH" --local-files-only --prompt "请用三句话介绍昇腾 CANN。" --max-new-tokens 128 --warmup 1 --repeat 3
 ```
 
 输出目录：
@@ -45,6 +40,8 @@ cases/qwen/reports/inference-baseline-template.md
 ```
 
 `cases/qwen/scripts/benchmark.py` 主要用于本地推理基线。脚本里的并发测试是主机侧同时发起多次生成请求，用来观察本地调用的变化，不等同于 vLLM-Ascend 或 MindIE 的服务化压测。服务化章节会单独记录接口延迟、吞吐和首 token 时间。
+
+2026 年 7 月 19 日已经完成一次 `warmup=0`、`repeat=1` 的运行检查。该数据记录在 `cases/qwen/reports/inference-baseline-it22hmda.md`，不与正式 benchmark 混用。
 
 ## 备注
 

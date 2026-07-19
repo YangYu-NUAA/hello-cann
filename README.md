@@ -2,7 +2,7 @@
 
 hello-cann 是一门面向昇腾 CANN 的开源实战课程。
 
-课程从一台可用的昇腾机器开始，依次完成环境检查、模型推理、单卡 LoRA 微调、profiling、瓶颈定位、Ascend C 算子开发和模型接入。主线案例使用 Qwen 系列模型，尽量让每一章都有能复跑的命令、输出和记录模板。
+课程从一台可用的昇腾机器开始，依次完成环境检查、模型推理、单卡 LoRA 微调、profiling、瓶颈定位、Ascend C 算子开发和模型接入。主线案例使用 Qwen 系列模型，各章提供运行命令、输出示例和记录模板。
 
 课程实操以单卡环境为准。多卡训练、tensor parallel 和 HCCL 放在软件栈说明、FAQ 和报错索引里，不影响主线学习。
 
@@ -50,10 +50,10 @@ hello-cann/
 
 ## 当前阶段
 
-第一阶段先把 Qwen 主线跑稳。服务器实验按“先能复现，再补优化”的顺序推进：
+当前按下面的项目进行服务器实测。环境检查和 Transformers 单卡推理已经完成：
 
 - 环境检查：`npu-smi`、驱动、CANN、HCCL 和 `torch_npu`；Docker 按平台条件选做。
-- 快速推理：Transformers + `torch_npu` 跑通 Qwen 小模型。
+- 快速推理：Transformers + `torch_npu` 已跑通 Qwen2.5-0.5B-Instruct。
 - 基线记录：固定 prompt、输出长度和版本，留下 JSON 结果。
 - 单卡微调：Qwen LoRA 先做 smoke test，再补完整训练记录。
 - 性能分析：用同一条推理命令采集 profile，整理热点表。
