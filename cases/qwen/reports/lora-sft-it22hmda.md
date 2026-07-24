@@ -82,3 +82,21 @@ python cases/qwen/scripts/merge_lora.py --base-model /mnt/workspace/data/Qwen2.5
 2. 服务器上的 CANN 已从 9.0.0 更新为 9.2.0，第二章按 9.2.0 记录。
 3. `libop_plugin_atb.so` 文件所有者警告没有阻塞训练和推理。
 4. Python 环境出现 Requests 依赖版本警告，没有阻塞本次实验，后续统一环境时再处理。
+
+## 脚本更新后复验
+
+加入 `--max-steps`、`--local-files-only` 和补充记录字段后，使用下面的命令再次运行：
+
+```bash
+python cases/qwen/scripts/run_lora_sft.py --model /mnt/workspace/data/Qwen2.5-0.5B-Instruct --local-files-only --data-file cases/qwen/datasets/huanhuan-100.json --output-dir cases/qwen/results/lora-smoke-v2 --max-steps 5 --per-device-train-batch-size 1 --gradient-accumulation-steps 1 --max-length 128 --logging-steps 1 --save-steps 1000 --no-gradient-checkpointing
+```
+
+| 项目 | 数值 |
+|:---|:---|
+| train loss | 4.3377410412 |
+| global step | 5 |
+| 训练总耗时 | 1.9902065040 秒 |
+| 峰值分配显存 | 1495.48 MB |
+| 结果文件 | cases/qwen/results/lora_sft_20260725_020414.json |
+
+复验记录中包含 `max_steps=5`、可训练参数量、Datasets 版本和 `cann_home=/home/developer/Ascend/cann-9.2.0`。JSONL 两条样例读取检查也已通过。
