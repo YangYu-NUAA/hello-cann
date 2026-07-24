@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
 import time
 from datetime import datetime
@@ -16,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import torch
+import datasets
 from datasets import Dataset
 from transformers import (
     AutoModelForCausalLM,
@@ -82,6 +84,7 @@ def parse_args() -> argparse.Namespace:
         "per_device_train_batch_size": 4,
         "gradient_accumulation_steps": 4,
         "num_train_epochs": 3,
+        "max_steps": -1,
         "learning_rate": 1e-4,
         "logging_steps": 10,
         "save_steps": 100,
@@ -94,6 +97,7 @@ def parse_args() -> argparse.Namespace:
         "swanlab_experiment": "qwen-lora-sft",
         "use_swanlab": False,
         "trust_remote_code": False,
+        "local_files_only": False,
     }
     defaults.update(load_config(pre_args.config))
 
@@ -124,6 +128,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--per-device-train-batch-size", type=int, default=defaults["per_device_train_batch_size"])
     parser.add_argument("--gradient-accumulation-steps", type=int, default=defaults["gradient_accumulation_steps"])
     parser.add_argument("--num-train-epochs", type=float, default=defaults["num_train_epochs"])
+    parser.add_argument(
+        "--max-steps",
+        type=int,
+        default=defaults["max_steps"],
+        help="Stop after this many optimizer steps. Positive values override epochs.",
+    )
     parser.add_argument("--learning-rate", type=float, default=defaults["learning_rate"])
     parser.add_argument("--logging-steps", type=int, default=defaults["logging_steps"])
     parser.add_argument("--save-steps", type=int, default=defaults["save_steps"])
@@ -140,6 +150,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--swanlab-experiment", default=defaults["swanlab_experiment"])
     parser.add_argument("--use-swanlab", action="store_true", default=defaults["use_swanlab"])
     parser.add_argument("--trust-remote-code", action="store_true", default=defaults["trust_remote_code"])
+    parser.add_argument(
+        "--local-files-only",
+        action="store_true",
+        default=defaults["local_files_only"],
+        help="Load model files from local paths/cache only.",
+    )
     args = parser.parse_args(remaining)
     args.config = pre_args.config
     if not args.model:
@@ -161,6 +177,38 @@ def ensure_npu_available(device: str) -> torch.device:
     return torch.device(device)
 
 
+def load_records(data_file: str) -> list[dict[str, Any]]:
+    path = Path(data_file)
+    text = path.read_text(encoding="utf-8").strip()
+    if not text:
+        raise ValueError(f"Dataset is empty: {path}")
+
+    try:
+        raw = json.loads(text)
+    except json.JSONDecodeError:
+        raw = [
+            json.loads(line)
+            for line in text.splitlines()
+            if line.strip()
+        ]
+
+    if isinstance(raw, dict) and "data" in raw:
+        raw = raw["data"]
+    if not isinstance(raw, list):
+        raise ValueError("Dataset must be a JSON array, JSONL file, or {'data': [...]}.")
+
+    records: list[dict[str, Any]] = []
+    for index, item in enumerate(raw):
+        if not isinstance(item, dict):
+            raise ValueError(f"Dataset row {index} is not an object.")
+        if not str(item.get("instruction", "")).strip():
+            raise ValueError(f"Dataset row {index} has no instruction.")
+        if not str(item.get("output", "")).strip():
+            raise ValueError(f"Dataset row {index} has no output.")
+        records.append(item)
+    return records
+
+
 def build_dataset(
     tokenizer: Any,
     data_file: str,
@@ -172,16 +220,15 @@ def build_dataset(
     Labels mask instruction tokens with -100 so loss is only computed on the response.
     Keeps the prompt, response and label mask logic explicit for teaching.
     """
-    raw = json.loads(Path(data_file).read_text(encoding="utf-8"))
-    if isinstance(raw, dict) and "data" in raw:
-        raw = raw["data"]
-    ds = Dataset.from_list(raw)
+    ds = Dataset.from_list(load_records(data_file))
 
     eos_token = tokenizer.eos_token or "<|im_end|>"
 
     def process(example: dict[str, Any]) -> dict[str, Any]:
-        user = (example.get("instruction", "") + example.get("input", "")).strip()
-        response = example.get("output", "").strip()
+        instruction = str(example.get("instruction", "")).strip()
+        extra_input = str(example.get("input", "")).strip()
+        user = f"{instruction}\n{extra_input}" if extra_input else instruction
+        response = str(example.get("output", "")).strip()
         prompt_text = tokenizer.apply_chat_template(
             [
                 {"role": "system", "content": system_prompt},
@@ -247,8 +294,12 @@ class MetricsTrainer(Trainer):
     def train(self, *args: Any, **kwargs: Any):
         if hasattr(torch, "npu") and hasattr(torch.npu, "reset_peak_memory_stats"):
             torch.npu.reset_peak_memory_stats()
+        if hasattr(torch, "npu"):
+            torch.npu.synchronize()
         self._train_start = time.perf_counter()
         result = super().train(*args, **kwargs)
+        if hasattr(torch, "npu"):
+            torch.npu.synchronize()
         self.state.train_total_seconds = (
             time.perf_counter() - self._train_start if self._train_start else None
         )
@@ -262,7 +313,10 @@ def main() -> None:
     torch.manual_seed(args.seed)
 
     tokenizer = AutoTokenizer.from_pretrained(
-        args.model, trust_remote_code=args.trust_remote_code, use_fast=False
+        args.model,
+        trust_remote_code=args.trust_remote_code,
+        use_fast=False,
+        local_files_only=args.local_files_only,
     )
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
@@ -271,8 +325,9 @@ def main() -> None:
 
     model = AutoModelForCausalLM.from_pretrained(
         args.model,
-        torch_dtype=resolve_dtype(args.dtype),
+        dtype=resolve_dtype(args.dtype),
         trust_remote_code=args.trust_remote_code,
+        local_files_only=args.local_files_only,
         low_cpu_mem_usage=True,
     )
     model.to(device)
@@ -287,6 +342,8 @@ def main() -> None:
     )
     model = get_peft_model(model, lora_config)
     model.print_trainable_parameters()
+    trainable_params = sum(param.numel() for param in model.parameters() if param.requires_grad)
+    total_params = sum(param.numel() for param in model.parameters())
 
     if args.gradient_checkpointing:
         try:
@@ -299,6 +356,7 @@ def main() -> None:
         per_device_train_batch_size=args.per_device_train_batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         num_train_epochs=args.num_train_epochs,
+        max_steps=args.max_steps,
         learning_rate=args.learning_rate,
         logging_steps=args.logging_steps,
         save_steps=args.save_steps,
@@ -340,17 +398,25 @@ def main() -> None:
             "alpha": args.lora_alpha,
             "dropout": args.lora_dropout,
             "target_modules": args.lora_target_modules,
+            "trainable_params": trainable_params,
+            "total_params": total_params,
+            "trainable_percent": round(trainable_params / total_params * 100, 6),
         },
         "training": {
             "per_device_train_batch_size": args.per_device_train_batch_size,
             "gradient_accumulation_steps": args.gradient_accumulation_steps,
             "num_train_epochs": args.num_train_epochs,
+            "max_steps": args.max_steps,
             "learning_rate": args.learning_rate,
             "max_length": args.max_length,
             "gradient_checkpointing": args.gradient_checkpointing,
         },
         "metrics": {
-            "train_loss": float(train_result.training_loss) if train_result.training_loss else None,
+            "train_loss": (
+                float(train_result.training_loss)
+                if train_result.training_loss is not None
+                else None
+            ),
             "global_step": train_result.global_step,
             "total_samples": len(train_dataset),
             "train_total_seconds": getattr(trainer.state, "train_total_seconds", None),
@@ -363,6 +429,8 @@ def main() -> None:
             "torch_npu": getattr(torch_npu, "__version__", "unknown"),
             "transformers": transformers.__version__,
             "peft": __import__("peft").__version__,
+            "datasets": datasets.__version__,
+            "cann_home": os.environ.get("ASCEND_HOME_PATH", ""),
         },
     }
 

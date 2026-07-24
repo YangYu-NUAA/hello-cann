@@ -18,6 +18,7 @@ hello-cann 是一门面向昇腾 CANN 的实战课程。课程从一台可用的
 
 - 每章都围绕可复现实验展开，命令、版本、输出和问题记录要能留在仓库里。
 - 推理、微调、profiling 和算子开发使用同一套 Qwen 案例与实验记录。
+- 每章完成首轮服务器实验后提供一个 Notebook，Notebook 直接调用仓库脚本。
 - 多卡训练、tensor parallel 和 HCCL 先放在概念说明和排障索引里，不作为第一版必做实验。
 - Ascend C 先跑通 Vector Add，再选择一个 LLM 常用算子做正确性和性能对比；其余算子作为扩展材料逐步补。
 
@@ -44,7 +45,7 @@ hello-cann 是一门面向昇腾 CANN 的实战课程。课程从一台可用的
 2. 推理 baseline：Transformers + `torch_npu` 跑通 Qwen2.5-0.5B，保存 JSON。（已完成运行检查）
 3. 本地 benchmark：只记录 `concurrency=1` 的基础吞吐、延迟和显存。
 4. profiling：用同一条推理命令采集一次 profile，整理热点表。
-5. LoRA：用示例数据跑一个 smoke test，确认训练、保存和合并流程。
+5. LoRA：用示例数据运行 5 step 单卡训练，确认训练、保存、合并和推理流程。（已完成）
 6. Ascend C：先尝试编译 Vector Add，记录 CANN 路径、SoC 名称和报错。
 
 vLLM-Ascend、MindIE、应用接入和 LLM 常用算子放在第二轮。第一轮不要求一次性完成所有章节。
@@ -221,7 +222,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 ---
 
-### 02. Fine-tune：从能推理到能改模型
+### 02. Fine-tune：微调与训练
 
 > **验收目标**：跑通一次可复现的单卡 LoRA 微调，保存训练日志、权重和推理验证结果。
 
@@ -248,21 +249,22 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 **实战小节**
 
-**02.4 单卡 LoRA 实战（Qwen 主线）**
+**02.4 单卡 LoRA 实战（Qwen 主线，已实测）**
 - 学习目标：在昇腾 NPU 上完成一次 Qwen LoRA 微调，记录 batch、seq length、显存、loss。
 - 主要产出：`lora-single-card.md`（已有第一轮步骤）+ `cases/qwen/scripts/run_lora_sft.py`（新增脚本）+ `cases/qwen/configs/lora-sft.example.json`。
 - 前置依赖：02.1-02.3。
 - 验证方式：训练正常出 loss 曲线，checkpoint 落盘，显存占用有记录。
+- 实测记录：`cases/qwen/reports/lora-sft-it22hmda.md`。当前数据为 5 step 运行检查，完整训练另行记录。
 
 **02.5 训练监控与日志**
 - 学习目标：用 SwanLab 记录 loss、吞吐、显存，保存训练日志。
 - 主要产出：`training-log.md`（已有骨架）+ SwanLab 接入说明。
 - 写作要点：训练监控先保证能记录 loss、耗时和显存；可视化平台作为可选项。
 
-**02.6 权重合并与推理验证**
+**02.6 权重合并与推理验证（已实测）**
 - 学习目标：合并 LoRA 权重回基座，用合并后的模型做推理验证。
 - 主要产出：`weight-merge.md`（新增）+ `cases/qwen/scripts/merge_lora.py`（新增脚本）。
-- 验证方式：合并前后输出对比，证明模型"学到了"任务（如角色扮演风格变化）。
+- 验证方式：adapter 能合并为完整模型，合并模型可以生成文本；训练效果使用独立问题另行比较。
 
 **02.7 多卡训练概念（只讲不做）**
 - 学习目标：知道 HCCL、进程启动方式、常见通信报错长什么样。
@@ -271,10 +273,10 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 > **02 章验收清单（嵌 index.md）**
 > - [ ] 02.1-02.3 三篇原理小节能独立读懂，不依赖实战代码。
-> - [ ] 单卡 LoRA 训练跑通，loss 曲线、显存、checkpoint 都有记录。
-> - [ ] 权重合并脚本可用，合并后模型推理输出符合预期。
-> - [ ] 训练日志已落盘到 `cases/qwen/results/` 或 SwanLab。
-> - [ ] 全程单卡，未出现必须多卡才能复现的步骤。
+> - [x] 单卡 LoRA 训练跑通，loss、显存、checkpoint 都有记录。
+> - [x] 权重合并脚本可用，合并后模型可以完成推理。
+> - [x] 训练日志已落盘到 `cases/qwen/results/`，并整理到 `cases/qwen/reports/`。
+> - [x] 全程单卡，未出现必须多卡才能复现的步骤。
 
 ---
 

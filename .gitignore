@@ -20,6 +20,9 @@ outputs/
 logs/
 *.log
 
+cases/*/results/*
+!cases/*/results/.gitkeep
+
 profiler_output/
 msprof/
 *.om

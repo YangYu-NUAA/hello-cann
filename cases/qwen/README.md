@@ -41,27 +41,19 @@ python cases/qwen/scripts/run_transformers_torch_npu.py --config cases/qwen/conf
 ### 2. 单卡 LoRA 微调（02 章）
 
 ```bash
-python cases/qwen/scripts/run_lora_sft.py \
-  --model /data/models/Qwen2.5-0.5B-Instruct \
-  --data-file cases/qwen/datasets/huanhuan-100.json \
-  --num-train-epochs 3
+export MODEL_PATH=/data/models/Qwen2.5-0.5B-Instruct && python cases/qwen/scripts/run_lora_sft.py --model "$MODEL_PATH" --local-files-only --data-file cases/qwen/datasets/huanhuan-100.json --max-steps 5 --per-device-train-batch-size 1 --gradient-accumulation-steps 1 --max-length 128 --no-gradient-checkpointing
 ```
 
 或用配置文件：
 
 ```bash
-python cases/qwen/scripts/run_lora_sft.py \
-  --config cases/qwen/configs/lora-sft.example.json
+python cases/qwen/scripts/run_lora_sft.py --config cases/qwen/configs/lora-sft.example.json
 ```
 
 合并 LoRA 权重并验证：
 
 ```bash
-python cases/qwen/scripts/merge_lora.py \
-  --base-model /data/models/Qwen2.5-0.5B-Instruct \
-  --adapter-path cases/qwen/results/lora \
-  --output-dir cases/qwen/results/lora_merged \
-  --verify-prompt "你是谁？"
+python cases/qwen/scripts/merge_lora.py --base-model "$MODEL_PATH" --local-files-only --adapter-path cases/qwen/results/lora --output-dir cases/qwen/results/lora_merged --verify-prompt "你是谁？"
 ```
 
 ### 3. benchmark（01 / 03 章）
@@ -92,15 +84,15 @@ cases/qwen/results/
 推理：
 
 ```bash
-pip install transformers accelerate safetensors sentencepiece
+python -m pip install transformers accelerate safetensors sentencepiece
 ```
 
 微调：
 
 ```bash
-pip install peft datasets
+python -m pip install peft datasets
 # 可选：SwanLab 训练监控
-pip install swanlab
+python -m pip install swanlab
 ```
 
 ## 后续内容

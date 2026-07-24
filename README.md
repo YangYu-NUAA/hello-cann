@@ -55,7 +55,7 @@ hello-cann/
 - 环境检查：`npu-smi`、驱动、CANN、HCCL 和 `torch_npu`；Docker 按平台条件选做。
 - 快速推理：Transformers + `torch_npu` 已跑通 Qwen2.5-0.5B-Instruct。
 - 基线记录：固定 prompt、输出长度和版本，留下 JSON 结果。
-- 单卡微调：Qwen LoRA 先做 smoke test，再补完整训练记录。
+- 单卡微调：Qwen LoRA 的 5 step 训练、adapter 保存、权重合并和推理验证已经完成。
 - 性能分析：用同一条推理命令采集 profile，整理热点表。
 - 算子开发：先编译和验证 Vector Add，再选择一个 LLM 常用算子继续做。
 - 服务化推理：vLLM-Ascend 或 MindIE 二选一跑通 OpenAI 兼容接口。

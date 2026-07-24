@@ -1,175 +1,160 @@
 # 单卡 LoRA 微调
 
-## 本节目标
+本节使用 Qwen2.5-0.5B-Instruct 和 100 条样例数据运行 LoRA 训练。先执行 5 step 的运行检查，再决定是否进行完整训练。
 
-基于 Qwen 系列模型完成一次单卡 LoRA 微调，保存训练日志、权重和推理验证结果。
+## 1. 环境
 
-第一轮实验先做 smoke test：确认数据能读、模型能训、checkpoint 能保存、LoRA 权重能合并。不要一开始追求完整效果。
+新开终端后先查找并加载 CANN 主环境脚本：
 
-## 测试环境
+```bash
+find /usr/local/Ascend ~/Ascend -name set_env.sh 2>/dev/null
+```
 
-| 项目 | 版本或说明 |
+本次实验使用：
+
+```bash
+source /home/developer/Ascend/cann-9.2.0/set_env.sh
+```
+
+不要使用 `msmemscope`、`ascendnpu-ir` 等工具目录中的同名脚本。随后进入仓库并激活 Python 环境：
+
+```bash
+cd /mnt/workspace/hello-cann-repo && source .venv/bin/activate
+```
+
+检查 NPU：
+
+```bash
+python -c "import torch, torch_npu; print(torch.__version__); print(torch_npu.__version__); print(torch.npu.is_available(), torch.npu.device_count())"
+```
+
+本次实测版本如下：
+
+| 项目 | 版本 |
 |:---|:---|
-| 硬件 | IT22HMDA_4_S（2 芯片），64 GB HBM/芯片 |
-| 系统 | Ubuntu 20.04.5 LTS，aarch64 |
-| CANN | 9.0.0 |
+| CANN | 9.2.0 |
 | Python | 3.11.4 |
 | PyTorch | 2.7.1+cpu |
 | torch_npu | 2.7.1.post2.dev20251226 |
-| 微调工具 | transformers + peft + datasets |
-| 模型 | Qwen2.5-0.5B-Instruct 或本地同级别 Qwen 模型 |
+| Transformers | 5.14.1 |
+| PEFT | 0.19.1 |
+| Datasets | 5.0.0 |
 
-实际版本以服务器输出为准，跑完后同步到 `docs/zh/06_reference/version-matrix.md`。
+01 章推理实验使用的是 CANN 9.0.0。两次实验的软件环境不同，性能数据不直接比较。
 
-## 前置条件
-
-先完成 00 和 01：
-
-- `torch_npu` 可以导入。
-- `torch.npu.is_available()` 返回 `True`。
-- Qwen 推理 baseline 已经跑通。
-- 模型权重已经下载到本地，或服务器可以访问模型仓库。
-
-安装本节依赖：
+## 2. 安装依赖
 
 ```bash
-pip install peft datasets
+python -m pip install peft datasets
 ```
 
-如果要接 SwanLab，再安装：
+安装后记录版本：
 
 ```bash
-pip install swanlab
+python -c "import peft, datasets; print('peft', peft.__version__); print('datasets', datasets.__version__)"
 ```
 
-## 数据
+SwanLab 只用于可选的训练监控，本次实验没有安装：
 
-第一轮使用仓库里的小样例：
+```bash
+python -m pip install swanlab
+```
+
+## 3. 准备模型和数据
+
+设置本地模型路径：
+
+```bash
+export MODEL_PATH=/mnt/workspace/data/Qwen2.5-0.5B-Instruct && test -f "$MODEL_PATH/config.json" && echo "model ok"
+```
+
+课程样例位于：
 
 ```text
 cases/qwen/datasets/huanhuan-100.json
 ```
 
-数据是 Alpaca 三字段格式：
+数据格式和 label mask 见 [dataset-format.md](dataset-format.md)。
 
-```json
-{
-  "instruction": "你是谁？",
-  "input": "",
-  "output": "臣妾甄嬛，参见皇上。"
-}
-```
-
-这份数据只用于验证训练流程。正式实验可以替换为自己的领域数据，但字段格式先保持一致。
-
-## 运行
-
-回到仓库根目录：
+## 4. 运行 5 step 最小训练
 
 ```bash
-cd /path/to/hello-cann
+python cases/qwen/scripts/run_lora_sft.py --model "$MODEL_PATH" --local-files-only --data-file cases/qwen/datasets/huanhuan-100.json --output-dir cases/qwen/results/lora-smoke --max-steps 5 --per-device-train-batch-size 1 --gradient-accumulation-steps 1 --max-length 128 --logging-steps 1 --save-steps 1000 --no-gradient-checkpointing
 ```
 
-先用配置文件跑一轮：
+`--max-steps 5` 会覆盖 `num_train_epochs`，适合检查训练代码。`--local-files-only` 禁止脚本联网查找模型文件。
 
-```bash
-python cases/qwen/scripts/run_lora_sft.py \
-  --config cases/qwen/configs/lora-sft.example.json
-```
-
-如果模型路径不同，直接覆盖：
-
-```bash
-python cases/qwen/scripts/run_lora_sft.py \
-  --config cases/qwen/configs/lora-sft.example.json \
-  --model /data/models/Qwen2.5-0.5B-Instruct
-```
-
-第一次调通时可以把训练做小：
-
-```bash
-python cases/qwen/scripts/run_lora_sft.py \
-  --model /data/models/Qwen2.5-0.5B-Instruct \
-  --num-train-epochs 1 \
-  --per-device-train-batch-size 1 \
-  --gradient-accumulation-steps 1 \
-  --max-length 512
-```
-
-## 输出
-
-脚本会保存：
+终端应当看到可训练参数量、逐 step loss 和完成信息：
 
 ```text
-cases/qwen/results/lora/
+trainable params: 4,399,104 || all params: 498,431,872 || trainable%: 0.8826
+...
+=== LoRA SFT Done ===
+train_loss: ...
+global_step: 5
+output_dir: cases/qwen/results/lora-smoke
+record_file: cases/qwen/results/lora_sft_....json
+```
+
+本次运行得到：
+
+| 项目 | 数值 |
+|:---|:---|
+| global step | 5 |
+| train loss | 4.3443 |
+| 训练总耗时 | 2.9814 秒 |
+| 峰值分配显存 | 1495.48 MB |
+| adapter 大小 | 约 17.6 MB |
+
+这些数字只对应 5 step 运行检查。
+
+## 5. 完整训练
+
+确认最小训练成功后，可以使用配置文件：
+
+```bash
+python cases/qwen/scripts/run_lora_sft.py --config cases/qwen/configs/lora-sft.example.json --model "$MODEL_PATH"
+```
+
+配置文件默认训练 3 个 epoch，batch size 为 4，梯度累积为 4，最大长度为 1024。运行前根据显存和数据长度调整参数。
+
+训练参数见 [training-config.md](training-config.md)。
+
+## 6. 输出文件
+
+adapter 目录包含：
+
+```text
+adapter_config.json
+adapter_model.safetensors
+chat_template.jinja
+tokenizer.json
+tokenizer_config.json
+training_args.bin
+```
+
+训练记录写入：
+
+```text
 cases/qwen/results/lora_sft_<timestamp>.json
 ```
 
-终端里至少要看到：
+整理后的记录放在 `cases/qwen/reports/`。生成的 checkpoint、合并模型和原始 JSON 不提交到 Git。
 
-```text
-=== LoRA SFT Done ===
-train_loss: ...
-global_step: ...
-output_dir: ...
-record_file: ...
-```
+## 7. 常见问题
 
-JSON 结果里会记录训练参数、loss、样本数、耗时、峰值显存和版本信息。
+### `libhccl.so` 找不到
 
-## 合并权重
+当前终端没有加载 CANN 环境。重新查找并 `source` CANN 主环境脚本，再导入 `torch_npu`。
 
-训练结束后，合并 LoRA 权重：
+### `Permission mismatch` 警告
 
-```bash
-python cases/qwen/scripts/merge_lora.py \
-  --base-model /data/models/Qwen2.5-0.5B-Instruct \
-  --adapter-path cases/qwen/results/lora \
-  --output-dir cases/qwen/results/lora_merged \
-  --verify-prompt "你是谁？"
-```
-
-如果显存紧张，可以先跳过验证：
-
-```bash
-python cases/qwen/scripts/merge_lora.py \
-  --base-model /data/models/Qwen2.5-0.5B-Instruct \
-  --adapter-path cases/qwen/results/lora \
-  --output-dir cases/qwen/results/lora_merged \
-  --no-verify
-```
-
-## 记录
-
-把本次结果填到：
-
-```text
-cases/qwen/reports/lora-sft-template.md
-```
-
-第一轮至少记录：
-
-| 项目 | 说明 |
-|:---|:---|
-| 训练命令 | 完整命令 |
-| 模型 | 本地路径或模型名 |
-| 数据 | 数据文件路径和样本数 |
-| batch / max_length | 实际使用值 |
-| loss | JSON 里的 `train_loss` |
-| 耗时 | JSON 里的 `train_total_seconds` |
-| 峰值显存 | JSON 里的 `peak_memory` |
-| checkpoint | LoRA 输出目录 |
-
-## 常见问题
-
-### `torch.npu is not available`
-
-先回到环境章，确认 CANN 环境变量、`libhccl.so` 动态链接检查和 `torch_npu` 最小张量校验。
+本次实验中该警告没有影响训练、保存和推理。不要直接修改平台预装文件的所有者。
 
 ### 显存不足
 
-先减小 `per_device_train_batch_size` 和 `max_length`，再考虑减少 LoRA 目标模块。第一轮只要求流程跑通。
+先减小 `per_device_train_batch_size` 和 `max_length`。仍然不足时启用 gradient checkpointing。
 
-### 训练很慢
+### loss 没有明显下降
 
-先记录真实耗时，不要改太多参数。后面 profiling 章再分析慢在哪里。
+5 step 只检查程序是否可运行。判断训练效果需要增加训练步数，并准备独立验证集。

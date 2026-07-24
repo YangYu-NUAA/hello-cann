@@ -36,6 +36,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dtype", choices=["auto", "float16", "bfloat16", "float32"], default="bfloat16")
     parser.add_argument("--trust-remote-code", action="store_true", default=False)
     parser.add_argument(
+        "--local-files-only",
+        action="store_true",
+        help="Load model files from local paths/cache only.",
+    )
+    parser.add_argument(
         "--verify-prompt",
         default="你是谁？",
         help="Prompt used for the post-merge sanity generation.",
@@ -60,12 +65,16 @@ def main() -> None:
     device = torch.device(args.device)
 
     tokenizer = AutoTokenizer.from_pretrained(
-        args.base_model, trust_remote_code=args.trust_remote_code, use_fast=False
+        args.base_model,
+        trust_remote_code=args.trust_remote_code,
+        use_fast=False,
+        local_files_only=args.local_files_only,
     )
     base = AutoModelForCausalLM.from_pretrained(
         args.base_model,
-        torch_dtype=resolve_dtype(args.dtype),
+        dtype=resolve_dtype(args.dtype),
         trust_remote_code=args.trust_remote_code,
+        local_files_only=args.local_files_only,
         low_cpu_mem_usage=True,
     )
 

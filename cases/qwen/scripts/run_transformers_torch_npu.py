@@ -261,7 +261,7 @@ def main() -> None:
     )
     model = AutoModelForCausalLM.from_pretrained(
         args.model,
-        torch_dtype=dtype,
+        dtype=dtype,
         trust_remote_code=args.trust_remote_code,
         local_files_only=args.local_files_only,
         low_cpu_mem_usage=True,
