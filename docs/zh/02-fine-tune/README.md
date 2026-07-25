@@ -1,14 +1,14 @@
 # 02. 昇腾大模型微调
 
-这一章使用 [Qwen2.5-0.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct) 完成一次单卡 LoRA 微调。训练任务是让模型学习《甄嬛传》人物的对话风格，过程包括数据处理、LoRA 配置、短训练、完整训练、验证集评估、回答对比和权重合并。
+本章使用 [Qwen2.5-0.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct) 完成一次单卡 LoRA 微调。训练任务是让模型学习《甄嬛传》人物的对话风格，过程包括数据处理、LoRA 配置、短训练、完整训练、验证集评估、回答对比和权重合并。
 
-完成本章后，你应该能够：
+本章内容包括：
 
-- 看懂一条 SFT 数据如何变成模型的 `input_ids` 和 `labels`；
-- 为 Qwen 的注意力层和前馈网络配置 LoRA；
-- 在单张昇腾 NPU 上运行训练，并读懂 loss、step 和显存记录；
-- 比较基座模型与 LoRA adapter 的输出；
-- 保存 adapter，并在需要时合并为完整模型。
+- SFT 数据的 `input_ids` 和 `labels` 构造；
+- Qwen 注意力层与前馈网络的 LoRA 配置；
+- 昇腾 NPU 单卡训练与 loss、step、显存记录；
+- 基座模型与 LoRA adapter 的输出对比；
+- adapter 保存与权重合并。
 
 配套 Notebook：[02-qwen-lora.ipynb](../../../notebooks/02-qwen-lora.ipynb)
 
@@ -40,7 +40,7 @@ Qwen2.5-0.5B-Instruct 已经具备通用对话能力。本章用少量角色对�
 2. [hello-rocm](https://github.com/datawhalechina/hello-rocm/blob/master/src/fine-tune/datasets/huanhuan-100.json) 从中整理了 100 条样例。
 3. hello-cann 收录同一份 100 条子集，用于昇腾单卡训练。
 
-选择这组数据是因为样本少、训练时间短，而且角色语言变化容易观察。它适合学习训练流程，不用于衡量模型的通用能力。
+这 100 条样本训练时间短，角色语言变化也容易观察，适合用于课程实验。
 
 先在仓库根目录查看数据：
 
@@ -72,7 +72,7 @@ python -c "import json; data=json.load(open('cases/qwen/datasets/huanhuan-100.js
 
 ## 2.3 数据如何送入 Qwen
 
-不同模型使用的对话标记不同。课程脚本不手写 `<|im_start|>` 等特殊 token，而是调用 Qwen tokenizer 自带的 chat template：
+不同模型使用的对话标记不同。课程脚本通过 Qwen tokenizer 自带的 chat template 生成对话格式：
 
 ```python
 prompt_text = tokenizer.apply_chat_template(
@@ -199,7 +199,7 @@ output_dir: cases/qwen/results/lora-smoke
 record_file: cases/qwen/results/lora_sft_<timestamp>.json
 ```
 
-5 step 只能说明训练程序工作正常，不能用来判断模型是否已经学会角色风格。
+5 step 的结果用于确认训练程序可以正常运行。角色风格的变化在完整训练后通过固定问题观察。
 
 ## 2.7 完成 3 epoch 训练
 
@@ -250,7 +250,7 @@ python cases/qwen/scripts/compare_lora_outputs.py --base-model "$MODEL_PATH" --l
 cases/qwen/results/lora_comparison_<timestamp>.json
 ```
 
-这组结果可以说明 adapter 改变了角色对话的表达方式。100 条数据不足以评价事实准确性，也不适合用来比较模型的通用能力。
+这组结果显示 adapter 改变了角色对话的表达方式。
 
 ## 2.9 保存 adapter 与合并权重
 
