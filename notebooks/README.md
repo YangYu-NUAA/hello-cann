@@ -4,7 +4,7 @@
 |:---|:---|:---|
 | [00-environment-check.ipynb](00-environment-check.ipynb) | 检查 `torch_npu` 并运行最小 NPU 张量计算 | [00 环境配置](../docs/zh/00-environment/README.md) |
 | [01-qwen-inference.ipynb](01-qwen-inference.ipynb) | 使用 Transformers 运行 Qwen 单卡推理 | [01 模型推理](../docs/zh/01-inference/README.md) |
-| [02-qwen-lora.ipynb](02-qwen-lora.ipynb) | 检查训练数据并运行单卡 LoRA | [02 单卡微调](../docs/zh/02-fine-tune/README.md) |
+| [02-qwen-lora.ipynb](02-qwen-lora.ipynb) | 检查训练数据并运行单卡 LoRA | [02 大模型微调](../docs/zh/02-fine-tune/README.md) |
 
 ## 启动
 

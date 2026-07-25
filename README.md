@@ -12,7 +12,7 @@ hello-cann 是一门面向昇腾 CANN 的开源实践课程，内容包括环境
 |:---|:---|:---|
 | 00 环境配置 | [环境检查与 `torch_npu` 验证](docs/zh/00-environment/README.md) | [00-environment-check.ipynb](notebooks/00-environment-check.ipynb) |
 | 01 模型推理 | [Transformers 单卡推理](docs/zh/01-inference/README.md) | [01-qwen-inference.ipynb](notebooks/01-qwen-inference.ipynb) |
-| 02 单卡微调 | [Qwen LoRA 微调](docs/zh/02-fine-tune/README.md) | [02-qwen-lora.ipynb](notebooks/02-qwen-lora.ipynb) |
+| 02 大模型微调 | [Qwen 单卡 LoRA 微调](docs/zh/02-fine-tune/README.md) | [02-qwen-lora.ipynb](notebooks/02-qwen-lora.ipynb) |
 | 03 性能分析 | [Profiling 与瓶颈定位](docs/zh/03-profiling/README.md) | - |
 | 04 算子开发 | [Ascend C 自定义算子](docs/zh/04-ascend-c/README.md) | - |
 | 05 综合案例 | [模型优化与应用接入](docs/zh/05-cases/README.md) | - |

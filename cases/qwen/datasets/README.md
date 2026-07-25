@@ -16,7 +16,7 @@
 
 数据来源：[datawhalechina/hello-rocm](https://github.com/datawhalechina/hello-rocm/blob/master/src/fine-tune/datasets/huanhuan-100.json)，原始数据来自 [huanhuan-chat](https://github.com/KMnO4-zx/huanhuan-chat)。
 
-hello-cann 用它做 LoRA 微调的最小验证示例。跑通后建议替换为自己的领域数据（同样三字段格式即可）。
+hello-cann 使用这 100 条数据讲解 SFT 编码、LoRA 训练、验证集评估和回答对比。自己的数据可以沿用相同的三字段格式。
 
 ## 数据格式说明
 
@@ -32,8 +32,6 @@ hello-cann 用它做 LoRA 微调的最小验证示例。跑通后建议替换为
 
 ## 准备自己的数据
 
-把你的训练数据导出成同样的 JSON 数组即可。建议：
+训练脚本支持 JSON 数组、JSONL，以及外层带 `data` 字段的 JSON。`instruction` 和 `output` 必须有内容，`input` 可以为空。
 
-- 至少 100-500 条做最小验证。
-- 验证集单独切出来（脚本默认全量训练，可在 `run_lora_sft.py` 里加 `eval_dataset`）。
-- 长文本截断到 `max_length`（默认 1024）。
+示例配置使用 `eval_ratio=0.1` 和 `seed=42`，将 100 条数据固定划分为 90 条训练数据和 10 条验证数据。长文本数据应先统计 token 长度，再设置 `max_length`。

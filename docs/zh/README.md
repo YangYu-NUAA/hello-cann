@@ -6,7 +6,7 @@
 |:---|:---|:---|
 | [00 环境配置](00-environment/README.md) | CANN 环境、`torch_npu` 和最小 NPU 计算 | [Notebook](../../notebooks/00-environment-check.ipynb) |
 | [01 模型推理](01-inference/README.md) | Transformers 推理、benchmark 和服务化 | [Notebook](../../notebooks/01-qwen-inference.ipynb) |
-| [02 单卡微调](02-fine-tune/README.md) | 数据处理、LoRA 训练、验证和权重合并 | [Notebook](../../notebooks/02-qwen-lora.ipynb) |
+| [02 大模型微调](02-fine-tune/README.md) | SFT 数据处理、LoRA 训练、验证和权重合并 | [Notebook](../../notebooks/02-qwen-lora.ipynb) |
 | [03 性能分析](03-profiling/README.md) | Profiling、热点算子和性能报告 | 正文 |
 | [04 算子开发](04-ascend-c/README.md) | Ascend C、Vector Add 和模型接入 | 正文 |
 | [05 综合案例](05-cases/README.md) | Qwen 优化和应用项目接入 | 正文 |

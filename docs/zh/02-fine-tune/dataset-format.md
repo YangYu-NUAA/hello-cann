@@ -1,5 +1,7 @@
 # 微调数据格式
 
+本章使用的 `huanhuan-100.json` 来自 [datawhalechina/hello-rocm](https://github.com/datawhalechina/hello-rocm/blob/master/src/fine-tune/datasets/huanhuan-100.json)，原始数据来自 [KMnO4-zx/huanhuan-chat](https://github.com/KMnO4-zx/huanhuan-chat/blob/master/dataset/train/lora/huanhuan.json)。仓库收录了 100 条角色对话，用于单卡 LoRA 教学实验。
+
 训练脚本读取 Alpaca 三字段数据：
 
 | 字段 | 说明 |
@@ -10,7 +12,7 @@
 
 ## JSON 数组
 
-课程样例 `cases/qwen/datasets/huanhuan-100.json` 使用 JSON 数组：
+课程样例 [`cases/qwen/datasets/huanhuan-100.json`](../../../cases/qwen/datasets/huanhuan-100.json) 使用 JSON 数组：
 
 ```json
 [
@@ -62,4 +64,4 @@ labels:    [-100, -100, ...]   [assistant tokens] [eos]
 python -c "import json; d=json.load(open('cases/qwen/datasets/huanhuan-100.json')); print(type(d).__name__, len(d)); print(d[0])"
 ```
 
-本次实测读入 100 条记录。首条编码后为 43 tokens，其中 18 tokens 参与 loss。
+课程脚本读入 100 条记录。首条编码后为 43 tokens，其中 18 tokens 参与 loss。
