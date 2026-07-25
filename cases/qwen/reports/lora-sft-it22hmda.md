@@ -100,3 +100,54 @@ python cases/qwen/scripts/run_lora_sft.py --model /mnt/workspace/data/Qwen2.5-0.
 | 结果文件 | cases/qwen/results/lora_sft_20260725_020414.json |
 
 复验记录中包含 `max_steps=5`、可训练参数量、Datasets 版本和 `cann_home=/home/developer/Ascend/cann-9.2.0`。JSONL 两条样例读取检查也已通过。
+
+## 3 epoch 训练
+
+2026 年 7 月 25 日继续使用同一台机器运行完整训练：
+
+```bash
+python cases/qwen/scripts/run_lora_sft.py --config cases/qwen/configs/lora-sft.example.json --model /mnt/workspace/data/Qwen2.5-0.5B-Instruct --output-dir cases/qwen/results/lora-full
+```
+
+数据按 `seed=42` 固定划分为 90 条训练数据和 10 条验证数据。
+
+| 参数 | 值 |
+|:---|:---|
+| epoch | 3 |
+| batch size | 4 |
+| 梯度累积 | 4 |
+| max length | 1024 |
+| learning rate | 1e-4 |
+| gradient checkpointing | True |
+| global step | 18 |
+
+| 指标 | 数值 |
+|:---|:---|
+| train loss | 3.8827552795 |
+| epoch 1 eval loss | 4.0161752701 |
+| epoch 2 eval loss | 3.9522368908 |
+| epoch 3 eval loss | 3.9445757866 |
+| 最终 eval loss | 3.9445755482 |
+| 训练总耗时 | 24.7237181619 秒 |
+| 当前分配显存 | 1001.04 MB |
+| 峰值分配显存 | 2154.29 MB |
+| 当前保留显存 | 3760.0 MB |
+| 峰值保留显存 | 3760.0 MB |
+| adapter 路径 | cases/qwen/results/lora-full |
+| 结果文件 | cases/qwen/results/lora_sft_20260725_155114.json |
+
+## 固定问题对比
+
+```bash
+python cases/qwen/scripts/compare_lora_outputs.py --base-model /mnt/workspace/data/Qwen2.5-0.5B-Instruct --local-files-only --adapter-path cases/qwen/results/lora-full --prompts-file cases/qwen/datasets/lora-eval-prompts.json --max-new-tokens 64
+```
+
+| 问题 | 基座模型 | LoRA adapter |
+|:---|:---|:---|
+| 娘娘，夜深了，可要歇息？ | 以助手口吻回答 | 使用“臣妾”“皇上”等角色用语 |
+| 御花园的梅花开了，娘娘可要去看看？ | 解释《甄嬛传》人物和地点 | 以角色口吻直接回答 |
+| 请简要说明 LoRA 微调的作用。 | 说明低秩适配及其用途 | 正常说明微调方法，没有转为宫廷对话 |
+
+对比记录为 `cases/qwen/results/lora_comparison_20260725_155155.json`。这组结果说明 adapter 已改变角色对话的表达方式。数据量只有 100 条，不能据此评价事实准确性或通用能力。
+
+完整训练时，Transformers 对 `warmup_ratio` 给出弃用提示。课程配置随后改为 `warmup_steps=1`。

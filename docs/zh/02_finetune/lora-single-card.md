@@ -118,6 +118,18 @@ python cases/qwen/scripts/run_lora_sft.py --config cases/qwen/configs/lora-sft.e
 
 配置文件设置 `eval_ratio=0.1` 和 `seed=42`。脚本固定划分出 90 条训练数据和 10 条验证数据，并在每个 epoch 结束后计算验证 loss。batch size 为 4，梯度累积为 4，最大长度为 1024。
 
+本次实测结果：
+
+| 项目 | 数值 |
+|:---|:---|
+| global step | 18 |
+| train loss | 3.8828 |
+| epoch 1 eval loss | 4.0162 |
+| epoch 2 eval loss | 3.9522 |
+| epoch 3 eval loss | 3.9446 |
+| 训练总耗时 | 24.7237 秒 |
+| 峰值分配显存 | 2154.29 MB |
+
 训练参数见 [training-config.md](training-config.md)。
 
 ## 6. 比较基座模型和 adapter

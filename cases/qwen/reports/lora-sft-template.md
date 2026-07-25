@@ -40,6 +40,7 @@
 | gradient_accumulation_steps |  |
 | num_train_epochs |  |
 | learning_rate |  |
+| warmup_steps |  |
 | max_length |  |
 | gradient_checkpointing |  |
 | eval_ratio |  |

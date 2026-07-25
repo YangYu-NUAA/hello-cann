@@ -19,6 +19,6 @@ Notebook 入口为 `notebooks/02_finetune.ipynb`。
 
 ## 已完成实验
 
-2026 年 7 月 25 日，单卡 LoRA 最小训练在 IT22HMDA_4_S、CANN 9.2.0 环境通过。训练运行 5 step，adapter 正常保存并合并，合并后的模型可以在 `npu:0` 上生成文本。
+2026 年 7 月 25 日，单卡 LoRA 训练在 IT22HMDA_4_S、CANN 9.2.0 环境通过。5 step 运行检查、3 epoch 训练、验证集评估、adapter 对比和权重合并均已运行。
 
-这次实验用于检查训练、保存、加载、合并和推理，不评价微调效果。完整记录见 [lora-sft-it22hmda.md](../../../cases/qwen/reports/lora-sft-it22hmda.md)。
+3 epoch 实验的 train loss 为 3.8828，最终 eval loss 为 3.9446。完整记录见 [lora-sft-it22hmda.md](../../../cases/qwen/reports/lora-sft-it22hmda.md)。

@@ -17,7 +17,7 @@
   "learning_rate": 1e-4,
   "logging_steps": 1,
   "save_steps": 1000,
-  "warmup_ratio": 0.03,
+  "warmup_steps": 1,
   "gradient_checkpointing": true,
   "seed": 42,
   "eval_ratio": 0.1,

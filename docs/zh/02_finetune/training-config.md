@@ -45,6 +45,7 @@ seed = 42
 |:---|:---|
 | `logging_steps` | 每隔多少 step 输出一次训练指标 |
 | `save_steps` | 每隔多少 step 保存 checkpoint |
+| `warmup_steps` | 学习率预热步数，示例配置为 1 |
 | `output_dir` | adapter 和 tokenizer 的保存目录 |
 | `report_to` | Trainer 日志后端，本章默认 `none` |
 

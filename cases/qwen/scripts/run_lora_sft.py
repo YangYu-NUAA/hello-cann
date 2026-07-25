@@ -88,7 +88,7 @@ def parse_args() -> argparse.Namespace:
         "learning_rate": 1e-4,
         "logging_steps": 10,
         "save_steps": 100,
-        "warmup_ratio": 0.03,
+        "warmup_steps": 1,
         "gradient_checkpointing": True,
         "seed": 42,
         "eval_ratio": 0.0,
@@ -139,7 +139,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--learning-rate", type=float, default=defaults["learning_rate"])
     parser.add_argument("--logging-steps", type=int, default=defaults["logging_steps"])
     parser.add_argument("--save-steps", type=int, default=defaults["save_steps"])
-    parser.add_argument("--warmup-ratio", type=float, default=defaults["warmup_ratio"])
+    parser.add_argument("--warmup-steps", type=int, default=defaults["warmup_steps"])
     parser.add_argument(
         "--gradient-checkpointing",
         action="store_true",
@@ -389,7 +389,7 @@ def main() -> None:
         learning_rate=args.learning_rate,
         logging_steps=args.logging_steps,
         save_steps=args.save_steps,
-        warmup_ratio=args.warmup_ratio,
+        warmup_steps=args.warmup_steps,
         gradient_checkpointing=args.gradient_checkpointing,
         save_on_each_node=False,
         report_to=args.report_to,
@@ -441,6 +441,7 @@ def main() -> None:
             "num_train_epochs": args.num_train_epochs,
             "max_steps": args.max_steps,
             "learning_rate": args.learning_rate,
+            "warmup_steps": args.warmup_steps,
             "max_length": args.max_length,
             "gradient_checkpointing": args.gradient_checkpointing,
             "eval_ratio": args.eval_ratio,
