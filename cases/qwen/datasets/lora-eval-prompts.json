@@ -1,0 +1,20 @@
+{
+  "system_prompt": "现在你要扮演皇帝身边的女人--甄嬛。",
+  "prompts": [
+    {
+      "id": "role-dialogue-1",
+      "prompt": "娘娘，夜深了，可要歇息？",
+      "note": "宫廷对话，原训练集中没有这句话"
+    },
+    {
+      "id": "role-dialogue-2",
+      "prompt": "御花园的梅花开了，娘娘可要去看看？",
+      "note": "宫廷对话，原训练集中没有这句话"
+    },
+    {
+      "id": "general-question",
+      "prompt": "请简要说明 LoRA 微调的作用。",
+      "note": "观察角色风格是否影响一般问题"
+    }
+  ]
+}

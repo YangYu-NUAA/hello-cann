@@ -1,6 +1,6 @@
 # 单卡 LoRA 微调
 
-本节使用 Qwen2.5-0.5B-Instruct 和 100 条样例数据运行 LoRA 训练。先执行 5 step 的运行检查，再决定是否进行完整训练。
+本节使用 Qwen2.5-0.5B-Instruct 和 100 条样例数据运行 LoRA 训练。5 step 用于检查代码和环境，3 epoch 实验使用 90 条训练数据和 10 条验证数据。
 
 ## 1. 环境
 
@@ -79,7 +79,7 @@ cases/qwen/datasets/huanhuan-100.json
 ## 4. 运行 5 step 最小训练
 
 ```bash
-python cases/qwen/scripts/run_lora_sft.py --model "$MODEL_PATH" --local-files-only --data-file cases/qwen/datasets/huanhuan-100.json --output-dir cases/qwen/results/lora-smoke --max-steps 5 --per-device-train-batch-size 1 --gradient-accumulation-steps 1 --max-length 128 --logging-steps 1 --save-steps 1000 --no-gradient-checkpointing
+python cases/qwen/scripts/run_lora_sft.py --model "$MODEL_PATH" --local-files-only --data-file cases/qwen/datasets/huanhuan-100.json --output-dir cases/qwen/results/lora-smoke --max-steps 5 --eval-ratio 0 --per-device-train-batch-size 1 --gradient-accumulation-steps 1 --max-length 128 --logging-steps 1 --save-steps 1000 --no-gradient-checkpointing
 ```
 
 `--max-steps 5` 会覆盖 `num_train_epochs`，适合检查训练代码。`--local-files-only` 禁止脚本联网查找模型文件。
@@ -110,17 +110,35 @@ record_file: cases/qwen/results/lora_sft_....json
 
 ## 5. 完整训练
 
-确认最小训练成功后，可以使用配置文件：
+确认最小训练成功后，使用配置文件运行 3 epoch：
 
 ```bash
-python cases/qwen/scripts/run_lora_sft.py --config cases/qwen/configs/lora-sft.example.json --model "$MODEL_PATH"
+python cases/qwen/scripts/run_lora_sft.py --config cases/qwen/configs/lora-sft.example.json --model "$MODEL_PATH" --output-dir cases/qwen/results/lora-full
 ```
 
-配置文件默认训练 3 个 epoch，batch size 为 4，梯度累积为 4，最大长度为 1024。运行前根据显存和数据长度调整参数。
+配置文件设置 `eval_ratio=0.1` 和 `seed=42`。脚本固定划分出 90 条训练数据和 10 条验证数据，并在每个 epoch 结束后计算验证 loss。batch size 为 4，梯度累积为 4，最大长度为 1024。
 
 训练参数见 [training-config.md](training-config.md)。
 
-## 6. 输出文件
+## 6. 比较基座模型和 adapter
+
+训练完成后运行固定问题：
+
+```bash
+python cases/qwen/scripts/compare_lora_outputs.py --base-model "$MODEL_PATH" --local-files-only --adapter-path cases/qwen/results/lora-full --prompts-file cases/qwen/datasets/lora-eval-prompts.json --max-new-tokens 64
+```
+
+脚本先生成基座模型回答，再加载 adapter 生成 LoRA 回答。两次推理使用相同的 system prompt、问题和生成参数。问题中有两条训练集外的宫廷对话，以及一条一般技术问题。
+
+比较结果写入：
+
+```text
+cases/qwen/results/lora_comparison_<timestamp>.json
+```
+
+输出差异需要人工阅读。100 条角色对话只能用于演示训练过程，不适合据此评价模型的通用能力。
+
+## 7. 输出文件
 
 adapter 目录包含：
 
@@ -141,7 +159,7 @@ cases/qwen/results/lora_sft_<timestamp>.json
 
 整理后的记录放在 `cases/qwen/reports/`。生成的 checkpoint、合并模型和原始 JSON 不提交到 Git。
 
-## 7. 常见问题
+## 8. 常见问题
 
 ### `libhccl.so` 找不到
 
@@ -157,4 +175,4 @@ cases/qwen/results/lora_sft_<timestamp>.json
 
 ### loss 没有明显下降
 
-5 step 只检查程序是否可运行。判断训练效果需要增加训练步数，并准备独立验证集。
+5 step 只检查程序是否可运行。完整训练应同时查看 train loss、eval loss 和固定问题的回答。

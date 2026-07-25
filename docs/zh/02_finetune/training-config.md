@@ -28,6 +28,17 @@ per_device_train_batch_size * gradient_accumulation_steps
 
 gradient checkpointing 会在反向传播时重新计算部分中间结果，以计算时间换显存。运行检查可用 `--no-gradient-checkpointing` 减少变量；长序列或较大 batch 时再开启。
 
+## 验证集
+
+完整训练配置将 10% 的数据用于验证：
+
+```text
+eval_ratio = 0.1
+seed = 42
+```
+
+`seed` 固定后，每次运行使用相同的 90 条训练数据和 10 条验证数据。脚本在每个 epoch 结束后计算 eval loss。5 step 运行检查使用 `--eval-ratio 0`，不运行验证。
+
 ## 保存与日志
 
 | 参数 | 说明 |

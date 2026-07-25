@@ -91,6 +91,8 @@ def parse_args() -> argparse.Namespace:
         "warmup_ratio": 0.03,
         "gradient_checkpointing": True,
         "seed": 42,
+        "eval_ratio": 0.0,
+        "per_device_eval_batch_size": 4,
         "report_to": "none",
         # SwanLab (optional)
         "swanlab_project": "hello-cann",
@@ -145,6 +147,17 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--no-gradient-checkpointing", dest="gradient_checkpointing", action="store_false")
     parser.add_argument("--seed", type=int, default=defaults["seed"])
+    parser.add_argument(
+        "--eval-ratio",
+        type=float,
+        default=defaults["eval_ratio"],
+        help="Fraction of records used for evaluation. Use 0 to disable evaluation.",
+    )
+    parser.add_argument(
+        "--per-device-eval-batch-size",
+        type=int,
+        default=defaults["per_device_eval_batch_size"],
+    )
     parser.add_argument("--report-to", default=defaults["report_to"])
     parser.add_argument("--swanlab-project", default=defaults["swanlab_project"])
     parser.add_argument("--swanlab-experiment", default=defaults["swanlab_experiment"])
@@ -311,6 +324,8 @@ def main() -> None:
     args = parse_args()
     device = ensure_npu_available(args.device)
     torch.manual_seed(args.seed)
+    if not 0 <= args.eval_ratio < 1:
+        raise SystemExit("--eval-ratio must be in the range [0, 1).")
 
     tokenizer = AutoTokenizer.from_pretrained(
         args.model,
@@ -321,7 +336,20 @@ def main() -> None:
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    train_dataset = build_dataset(tokenizer, args.data_file, args.system_prompt, args.max_length)
+    full_dataset = build_dataset(tokenizer, args.data_file, args.system_prompt, args.max_length)
+    eval_dataset = None
+    if args.eval_ratio > 0:
+        if len(full_dataset) < 2:
+            raise SystemExit("At least two records are required when --eval-ratio is enabled.")
+        splits = full_dataset.train_test_split(
+            test_size=args.eval_ratio,
+            seed=args.seed,
+            shuffle=True,
+        )
+        train_dataset = splits["train"]
+        eval_dataset = splits["test"]
+    else:
+        train_dataset = full_dataset
 
     model = AutoModelForCausalLM.from_pretrained(
         args.model,
@@ -354,6 +382,7 @@ def main() -> None:
     training_args = TrainingArguments(
         output_dir=args.output_dir,
         per_device_train_batch_size=args.per_device_train_batch_size,
+        per_device_eval_batch_size=args.per_device_eval_batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         num_train_epochs=args.num_train_epochs,
         max_steps=args.max_steps,
@@ -366,6 +395,8 @@ def main() -> None:
         report_to=args.report_to,
         seed=args.seed,
         remove_unused_columns=False,
+        eval_strategy="epoch" if eval_dataset is not None else "no",
+        prediction_loss_only=True,
     )
 
     data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=True)
@@ -375,11 +406,13 @@ def main() -> None:
         model=model,
         args=training_args,
         train_dataset=train_dataset,
+        eval_dataset=eval_dataset,
         data_collator=data_collator,
         callbacks=callbacks,
     )
 
     train_result = trainer.train()
+    eval_metrics = trainer.evaluate() if eval_dataset is not None else {}
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -410,6 +443,9 @@ def main() -> None:
             "learning_rate": args.learning_rate,
             "max_length": args.max_length,
             "gradient_checkpointing": args.gradient_checkpointing,
+            "eval_ratio": args.eval_ratio,
+            "per_device_eval_batch_size": args.per_device_eval_batch_size,
+            "seed": args.seed,
         },
         "metrics": {
             "train_loss": (
@@ -418,9 +454,17 @@ def main() -> None:
                 else None
             ),
             "global_step": train_result.global_step,
-            "total_samples": len(train_dataset),
+            "total_samples": len(full_dataset),
+            "train_samples": len(train_dataset),
+            "eval_samples": len(eval_dataset) if eval_dataset is not None else 0,
+            "eval_loss": (
+                float(eval_metrics["eval_loss"])
+                if "eval_loss" in eval_metrics
+                else None
+            ),
             "train_total_seconds": getattr(trainer.state, "train_total_seconds", None),
             "peak_memory": getattr(trainer.state, "train_peak_memory", {}),
+            "log_history": trainer.state.log_history,
         },
         "output_dir": str(output_dir),
         "versions": {
@@ -440,6 +484,7 @@ def main() -> None:
 
     print("=== LoRA SFT Done ===")
     print(f"train_loss: {record['metrics']['train_loss']}")
+    print(f"eval_loss: {record['metrics']['eval_loss']}")
     print(f"global_step: {record['metrics']['global_step']}")
     print(f"output_dir: {record['output_dir']}")
     print(f"record_file: {record_file}")

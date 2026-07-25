@@ -42,14 +42,18 @@
 | learning_rate |  |
 | max_length |  |
 | gradient_checkpointing |  |
+| eval_ratio |  |
+| seed |  |
 
 ## 训练结果
 
 | 指标 | 数值 |
 |:---|:---|
 | train_loss |  |
+| eval_loss |  |
 | global_step |  |
-| 训练样本数 |  |
+| 训练集样本数 |  |
+| 验证集样本数 |  |
 | 训练总耗时 |  |
 | 峰值显存 |  |
 | checkpoint 路径 |  |
@@ -57,7 +61,7 @@
 
 ## 推理验证
 
-合并权重后的对比：
+基座模型和 adapter 的对比：
 
 | 输入 | 微调前输出 | 微调后输出 |
 |:---|:---|:---|

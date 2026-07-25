@@ -10,10 +10,11 @@
 | LoRA r、alpha、dropout、目标模块 | JSON 记录 |
 | batch、梯度累积、序列长度 | JSON 记录 |
 | epoch 或 max steps | JSON 记录 |
-| train loss、global step、训练耗时 | JSON 记录 |
+| train loss、eval loss、global step、训练耗时 | JSON 记录 |
+| 训练集和验证集样本数、随机种子 | JSON 记录 |
 | 当前与峰值显存 | JSON 记录 |
 | adapter 和合并模型路径 | 脚本输出 |
-| 微调前后回答 | 推理输出 |
+| 基座模型和 adapter 回答 | 对比 JSON |
 
 模板位于：
 
