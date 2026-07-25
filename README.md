@@ -1,92 +1,85 @@
 # hello-cann
 
-hello-cann 是一门面向昇腾 CANN 的开源实战课程。
+hello-cann 是一门面向昇腾 CANN 的开源实践课程，内容包括环境配置、模型推理、单卡 LoRA 微调、性能分析、Ascend C 算子开发和应用接入。
 
-本课程从一台可用的昇腾机器开始，依次完成环境检查、模型推理、单卡 LoRA 微调、profiling、瓶颈定位、Ascend C 算子开发和模型接入。主线案例使用 Qwen 系列小模型，每一章都配有能复现学习的命令、输出和记录模板。
+课程示例主要使用 Qwen 系列模型。除特别标注外，实验均可在单张昇腾 NPU 上完成。
 
-本课程范例以单卡环境为准。多卡训练、tensor parallel 和 HCCL 放在软件栈说明、FAQ 和报错索引里，作为拓展内容供学习者学习。
+## 开始学习
 
-实验环境固定在一台双芯片昇腾机器上，总显存 128 GB，系统为 Ubuntu 20.04.5 LTS aarch64，驱动版本为 25.5.5，CANN 版本为 9.0.0，Python 版本为 3.11.4。
+按章节顺序阅读正文。已经完成实验的章节同时提供 Notebook。
 
-## 适合谁
+| 章节 | 正文入口 | Notebook |
+|:---|:---|:---|
+| 00 环境配置 | [环境检查与 `torch_npu` 验证](docs/zh/00-environment/README.md) | [00-environment-check.ipynb](notebooks/00-environment-check.ipynb) |
+| 01 模型推理 | [Transformers 单卡推理](docs/zh/01-inference/README.md) | [01-qwen-inference.ipynb](notebooks/01-qwen-inference.ipynb) |
+| 02 单卡微调 | [Qwen LoRA 微调](docs/zh/02-fine-tune/README.md) | [02-qwen-lora.ipynb](notebooks/02-qwen-lora.ipynb) |
+| 03 性能分析 | [Profiling 与瓶颈定位](docs/zh/03-profiling/README.md) | - |
+| 04 算子开发 | [Ascend C 自定义算子](docs/zh/04-ascend-c/README.md) | - |
+| 05 综合案例 | [模型优化与应用接入](docs/zh/05-cases/README.md) | - |
+| 06 参考资料 | [版本、组件与常见问题](docs/zh/06-references/README.md) | - |
 
-- 有 Python、PyTorch 或大模型应用基础，希望上手昇腾 NPU 的开发者。
-- 想系统学习 CANN、`torch_npu`、Ascend C、自定义算子和模型优化的学生、工程师和研究人员。
-- 负责模型迁移、推理服务、训练优化、算子开发或性能调优的工程开发者。
-- 对算子开发、算子竞赛、开源算子贡献感兴趣的社区开发者。
+完整目录见 [中文课程目录](docs/zh/README.md)，课程规划见 [COURSE_OUTLINE.md](COURSE_OUTLINE.md)。
 
-## 学习路线
+## 使用方式
 
-1. **Environment**：检查硬件、驱动、固件、CANN、Python、PyTorch 和 `torch_npu`。
-2. **Inference**：用 Transformers、vLLM-Ascend 或 MindIE 跑通 Qwen 系列模型推理。
-3. **Fine-tune**：完成一次单卡 LoRA 微调，保存日志、权重和验证结果。
-4. **Profiling**：观察推理或训练链路，定位热点算子、显存和数据搬运问题。
-5. **Ascend C**：从基础算子开始，理解 tiling、数据搬运、编译运行和调试。
-6. **Cases**：把推理、微调、profiling、算子开发、模型接入和应用接入串成一个项目。
-7. **Reference**：整理版本矩阵、FAQ、术语表、组件索引和常见错误。
+克隆仓库后，从第 00 章开始阅读：
+
+```bash
+git clone https://github.com/YangYu-NUAA/hello-cann.git
+cd hello-cann
+```
+
+正文中的模型目录通过 `MODEL_PATH` 指定。模型保存在什么位置都可以，例如：
+
+```bash
+export MODEL_PATH=/path/to/Qwen2.5-0.5B-Instruct
+```
+
+模型权重不纳入仓库。使用已下载的权重时在命令中加入 `--local-files-only`；也可以把 `--model` 设为 Hugging Face 模型名称。
+
+Notebook 和 Markdown 使用同一组脚本。Notebook 适合逐步执行，Markdown 适合在服务器终端中复制命令。
+
+## 学习内容
+
+1. 检查 NPU、驱动、CANN、Python、PyTorch 和 `torch_npu`。
+2. 使用 Transformers 在昇腾 NPU 上运行 Qwen 推理。
+3. 完成单卡 LoRA 微调，保存 adapter 并比较微调前后的输出。
+4. 采集 profile，查看算子耗时、显存和数据搬运。
+5. 编写 Ascend C 算子，完成编译、正确性检查和性能记录。
+6. 将优化后的模型服务接入上层应用。
+
+多卡训练、tensor parallel 和 HCCL 作为扩展内容介绍，不是完成课程的必需条件。
 
 ## 仓库结构
 
 ```text
 hello-cann/
-├── docs/
-│   └── zh/
-│       ├── 00_environment/   # 环境与版本基线
-│       ├── 01_inference/     # 模型推理与服务化
-│       ├── 02_finetune/      # 单卡 LoRA 微调
-│       ├── 03_profiling/     # 性能分析与瓶颈定位
-│       ├── 04_ascendc/       # Ascend C、自定义算子和 LLM 常用算子
-│       ├── 05_cases/         # 贯穿案例和应用项目接入
-│       └── 06_reference/     # 资料、FAQ 和术语表
-├── cases/                    # 可复现案例工程
-├── src/                      # 每章配套代码
-├── notebooks/                # 交互式教程
-├── assets/                   # 架构图、截图、profile 结果、性能表
-├── templates/                # 教程、实验记录、案例报告模板
-├── COURSE_OUTLINE.md         # 课程大纲
-├── COMMUNITY_TASK.md         # 社区任务描述
-└── CONTENT_GUIDE.md          # 内容规范
+├── docs/zh/                  # 中文课程正文
+│   ├── 00-environment/
+│   ├── 01-inference/
+│   ├── 02-fine-tune/
+│   ├── 03-profiling/
+│   ├── 04-ascend-c/
+│   ├── 05-cases/
+│   └── 06-references/
+├── notebooks/                # 可直接运行的章节 Notebook
+├── cases/                    # Qwen 案例脚本、配置和实验记录
+├── src/                      # 环境检查脚本和 Ascend C 工程
+├── assets/                   # 图片与性能分析结果
+└── templates/                # 实验记录和案例模板
 ```
 
-## 当前阶段
+## 已完成内容
 
-第一阶段先把 Qwen 主线跑稳。服务器实验按“先能复现，再补优化”的顺序推进：
+- 环境检查、CANN 环境加载和最小 NPU 张量计算。
+- Qwen2.5-0.5B-Instruct Transformers 单卡推理。
+- Qwen2.5-0.5B-Instruct 单卡 LoRA 训练、验证集评估和 adapter 对比。
 
-- 环境检查：`npu-smi`、驱动、CANN、HCCL 和 `torch_npu`；Docker 按平台条件选做。
-- 快速推理：Transformers + `torch_npu` 跑通 Qwen 小模型。
-- 基线记录：固定 prompt、输出长度和版本，留下 JSON 结果。
-- 单卡微调：Qwen LoRA 先做 smoke test，再补完整训练记录。
-- 性能分析：用同一条推理命令采集 profile，整理热点表。
-- 算子开发：先编译和验证 Vector Add，再选择一个 LLM 常用算子继续做。
-- 服务化推理：vLLM-Ascend 或 MindIE 二选一跑通 OpenAI 兼容接口。
-- 应用接入：模型服务稳定后，再接 `hello-agent`、`hello-claw` 或 `torch-rechub`。
-- 案例报告：整理版本、命令、指标、问题和可复现步骤。
-
-## 文档写法
-
-每篇教程都要写清楚：
-
-- 在什么硬件、系统、CANN 和框架版本下验证过。
-- 执行了哪些命令，关键输出是什么。
-- 怎么判断任务真的成功。
-- 遇到问题时先查哪里。
-- 本节是否做性能对比；如果做，指标和输入条件是什么。
-
-新增内容前先看 [CONTENT_GUIDE.md](CONTENT_GUIDE.md)。
+实验使用的软件版本和设备信息集中记录在 [版本矩阵](docs/zh/06-references/version-matrix.md)。
 
 ## 贡献
 
-欢迎提交教程、脚本、排障记录和实验结果。跑通了可以写，失败记录也可以写，只要能帮助后面的学习者少踩一次坑。
-
-可以先从这些内容开始贡献：
-
-- 某个 CANN / `torch_npu` 版本组合的环境记录。
-- Qwen 推理、LoRA、profiling 的复现实验。
-- Ascend C 基础算子或调试记录。
-- 一个 LLM 常用算子的 CANN 实现、正确性测试和性能记录。
-- 昇腾模型服务接入上层应用的实验记录。
-- FAQ、错误日志和排查路径。
-- 案例报告和性能记录表。
+欢迎提交教程、脚本、算子、实验记录和排障说明。新增内容请参考 [CONTENT_GUIDE.md](CONTENT_GUIDE.md)。
 
 ## License
 

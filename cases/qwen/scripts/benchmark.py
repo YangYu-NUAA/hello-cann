@@ -2,8 +2,8 @@
 """Benchmark Qwen text generation on Ascend NPU.
 
 Records latency, throughput and peak memory across multiple prompt lengths,
-concurrency levels and repeats. Output is a JSON record that 03_profiling and
-05_cases can directly consume as the optimization baseline.
+concurrency levels and repeats. Output is a JSON record that 03-profiling and
+05-cases can directly consume as the optimization baseline.
 
 Uses JSON config plus CLI overrides, writes a JSON result record, and records
 NPU memory stats and package versions. Single-card only.
