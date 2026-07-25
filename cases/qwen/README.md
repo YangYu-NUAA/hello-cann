@@ -1,6 +1,6 @@
 # Qwen 主线案例
 
-本目录存放 Qwen 系列模型的推理、微调、benchmark、profiling 和算子优化案例。是 hello-cann 的主线案例工程。
+本目录存放 Qwen 系列模型的推理、微调、benchmark、profiling 和算子优化代码。
 
 ## 目录
 
@@ -24,63 +24,54 @@ cases/qwen/
     └── inference-baseline-template.md
 ```
 
-## 当前实验
+## 使用示例
+
+先设置模型路径：
+
+```bash
+export MODEL_PATH=/path/to/Qwen2.5-0.5B-Instruct
+```
 
 ### 1. Transformers + torch_npu 推理 baseline（01 章）
 
 ```bash
-python cases/qwen/scripts/run_transformers_torch_npu.py \
-  --model /data/models/Qwen2.5-0.5B-Instruct \
-  --prompt "请用三句话介绍昇腾 CANN。" \
-  --max-new-tokens 128 --warmup 1 --repeat 3
+python cases/qwen/scripts/run_transformers_torch_npu.py --model "$MODEL_PATH" --local-files-only --prompt "请用三句话介绍昇腾 CANN。" --max-new-tokens 128 --warmup 1 --repeat 3
 ```
 
 或用配置文件：
 
 ```bash
-python cases/qwen/scripts/run_transformers_torch_npu.py \
-  --config cases/qwen/configs/transformers-torch-npu.example.json
+python cases/qwen/scripts/run_transformers_torch_npu.py --config cases/qwen/configs/transformers-torch-npu.example.json
 ```
 
 ### 2. 单卡 LoRA 微调（02 章）
 
 ```bash
-python cases/qwen/scripts/run_lora_sft.py \
-  --model /data/models/Qwen2.5-0.5B-Instruct \
-  --data-file cases/qwen/datasets/huanhuan-100.json \
-  --num-train-epochs 3
+python cases/qwen/scripts/run_lora_sft.py --model "$MODEL_PATH" --local-files-only --data-file cases/qwen/datasets/huanhuan-100.json --max-steps 5 --per-device-train-batch-size 1 --gradient-accumulation-steps 1 --max-length 128 --no-gradient-checkpointing
 ```
 
 或用配置文件：
 
 ```bash
-python cases/qwen/scripts/run_lora_sft.py \
-  --config cases/qwen/configs/lora-sft.example.json
+python cases/qwen/scripts/run_lora_sft.py --config cases/qwen/configs/lora-sft.example.json
 ```
 
 合并 LoRA 权重并验证：
 
 ```bash
-python cases/qwen/scripts/merge_lora.py \
-  --base-model /data/models/Qwen2.5-0.5B-Instruct \
-  --adapter-path cases/qwen/results/lora \
-  --output-dir cases/qwen/results/lora_merged \
-  --verify-prompt "你是谁？"
+python cases/qwen/scripts/merge_lora.py --base-model "$MODEL_PATH" --local-files-only --adapter-path cases/qwen/results/lora --output-dir cases/qwen/results/lora_merged --verify-prompt "你是谁？"
 ```
 
 ### 3. benchmark（01 / 03 章）
 
 ```bash
-python cases/qwen/scripts/benchmark.py \
-  --model /data/models/Qwen2.5-0.5B-Instruct \
-  --concurrency 1 2 4 --repeat 3
+python cases/qwen/scripts/benchmark.py --model "$MODEL_PATH" --concurrency 1 2 4 --repeat 3
 ```
 
 或用配置文件：
 
 ```bash
-python cases/qwen/scripts/benchmark.py \
-  --config cases/qwen/configs/benchmark.example.json
+python cases/qwen/scripts/benchmark.py --config cases/qwen/configs/benchmark.example.json --model "$MODEL_PATH"
 ```
 
 结果默认写入：
@@ -96,25 +87,19 @@ cases/qwen/results/
 推理：
 
 ```bash
-pip install transformers accelerate safetensors sentencepiece
+python -m pip install transformers accelerate safetensors sentencepiece
 ```
 
 微调：
 
 ```bash
-pip install peft datasets
+python -m pip install peft datasets
 # 可选：SwanLab 训练监控
-pip install swanlab
+python -m pip install swanlab
 ```
-
-## 后续内容
-
-1. profiling（复用 benchmark.py 的命令采集 profile）。
-2. Ascend C 最小算子（见 `src/04_ascendc/vector_add/`）。
-3. 模型链路接入和性能对比（见 `docs/zh/05_cases/qwen-optimization.md`）。
 
 ## 相关文档
 
-- 推理教程：[docs/zh/01_inference/transformers-torch-npu.md](../../docs/zh/01_inference/transformers-torch-npu.md)
-- 微调教程：[docs/zh/02_finetune/lora-single-card.md](../../docs/zh/02_finetune/lora-single-card.md)
-- 主线案例：[docs/zh/05_cases/qwen-optimization.md](../../docs/zh/05_cases/qwen-optimization.md)
+- 推理教程：[docs/zh/01-inference/transformers-torch-npu.md](../../docs/zh/01-inference/transformers-torch-npu.md)
+- 微调教程：[docs/zh/02-fine-tune/lora-single-card.md](../../docs/zh/02-fine-tune/lora-single-card.md)
+- 主线案例：[docs/zh/05-cases/qwen-optimization.md](../../docs/zh/05-cases/qwen-optimization.md)

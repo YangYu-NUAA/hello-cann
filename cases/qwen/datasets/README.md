@@ -28,7 +28,7 @@ hello-cann 用它做 LoRA 微调的最小验证示例。跑通后建议替换为
 | `input` | 指令的补充输入，没有则置空 | 否 |
 | `output` | 期望的模型回复 | 是 |
 
-训练时脚本会用模型的 chat template 包装 `instruction` + `input`，并对这部分做 `-100` mask，只在 `output` 上计算 loss。详见 [docs/zh/02_finetune/dataset-format.md](../../../docs/zh/02_finetune/dataset-format.md)。
+训练时脚本会用模型的 chat template 包装 `instruction` + `input`，并对这部分做 `-100` mask，只在 `output` 上计算 loss。详见 [docs/zh/02-fine-tune/dataset-format.md](../../../docs/zh/02-fine-tune/dataset-format.md)。
 
 ## 准备自己的数据
 

@@ -1,0 +1,13 @@
+# 05. Cases：贯穿案例
+
+这一章把环境、推理、微调、profiling、算子开发和模型接入整理成完整项目。
+
+[返回课程目录](../README.md) · [下一章：参考资料](../06-references/README.md)
+
+## 内容
+
+| 文档 | 内容 |
+|:---|:---|
+| [qwen-optimization.md](qwen-optimization.md) | Qwen 系列模型训推与算子优化 |
+| [application-projects.md](application-projects.md) | 昇腾模型服务接入应用项目 |
+| [case-report-template.md](case-report-template.md) | 案例报告模板 |

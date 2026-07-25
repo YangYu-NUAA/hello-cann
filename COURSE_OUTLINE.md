@@ -1,8 +1,6 @@
 # hello-cann 课程大纲
 
-这份大纲记录 hello-cann 第一版课程的主线、产出和验收方式。每节都会尽量写清楚要做什么、做到什么程度、最后留下哪些结果，方便后续逐章实验和补正文。
-
-大纲会随着机器环境、模型选择和案例验证继续调整，调整时请同步更新本文件，而不是只改章节正文。
+这份大纲列出 hello-cann 的章节安排、配套实验和学习要求。
 
 ---
 
@@ -17,37 +15,12 @@ hello-cann 是一门面向昇腾 CANN 的实战课程。课程从一台可用的
 ### 课程特点
 
 - 每章都围绕可复现实验展开，命令、版本、输出和问题记录要能留在仓库里。
-- 推理、微调、profiling、算子开发尽量使用同一条 Qwen 主线，减少读者在不同案例之间来回切换。
-- 多卡训练、tensor parallel 和 HCCL 先放在概念说明和排障索引里，不作为第一版必做实验。
+- 推理、微调、profiling 和算子开发使用同一套 Qwen 案例与实验记录。
+- 实操章节提供 Notebook，Notebook 直接调用仓库脚本。
+- 多卡训练、tensor parallel 和 HCCL 放在概念说明和排障索引里，不作为必做实验。
 - Ascend C 先跑通 Vector Add，再选择一个 LLM 常用算子做正确性和性能对比；其余算子作为扩展材料逐步补。
 
-### 第一组实验环境
-
-| 项目 | 值 |
-|:---|:---|
-| 昇腾卡型号 | IT22HMDA_4_S（2 芯片） |
-| 单芯片显存 | 64 GB HBM（共 128 GB） |
-| 操作系统 | Ubuntu 20.04.5 LTS，kernel 5.10.0-182（aarch64） |
-| 驱动版本 | 25.5.5（Innerversion: V100R001C23SPC009B220） |
-| 固件版本 | `npu-smi` 返回 `NA` |
-| CANN 版本 | 9.0.0（`~/Ascend/cann-9.0.0/`） |
-| Python 版本 | 3.11.4 |
-| PyTorch / torch_npu | torch 2.7.1+cpu / torch_npu 2.7.1.post2.dev20251226 |
-
-00 章已经完成实测：HCCL 动态库可用，`torch_npu` 能识别 2 个 NPU，最小张量计算通过。Transformers 在 01 章安装。
-
-### 第一轮实验边界
-
-第一轮服务器实验先做最小闭环：
-
-1. 环境检查：`npu-smi`、CANN 路径、`torch_npu` 导入、最小 NPU 张量。
-2. 推理 baseline：Transformers + `torch_npu` 跑通 Qwen2.5-0.5B，保存 JSON。
-3. 本地 benchmark：只记录 `concurrency=1` 的基础吞吐、延迟和显存。
-4. profiling：用同一条推理命令采集一次 profile，整理热点表。
-5. LoRA：用示例数据跑一个 smoke test，确认训练、保存和合并流程。
-6. Ascend C：先尝试编译 Vector Add，记录 CANN 路径、SoC 名称和报错。
-
-vLLM-Ascend、MindIE、应用接入和 LLM 常用算子放在第二轮。第一轮不要求一次性完成所有章节。
+课程采用单卡实验，已经完成环境检查、Transformers 推理和 LoRA 微调验证。实测使用的硬件与软件版本见[版本矩阵](docs/zh/06-references/version-matrix.md)，运行命令与结果见 [`cases/qwen/reports/`](cases/qwen/reports/)。
 
 ### 组件出现位置
 
@@ -56,7 +29,7 @@ vLLM-Ascend、MindIE、应用接入和 LLM 常用算子放在第二轮。第一�
 | 主线展开 | `torch_npu`、profiling、Ascend C、自定义算子接入 | 写步骤、代码、验证和排障 |
 | 章节穿插 | ACL / AscendCL、ATC / OM、GE / GraphEngine、HCCL | 在用到时讲清用途和常见问题 |
 | 应用接入 | vLLM-Ascend、MindIE、OpenAI 兼容接口、应用侧网关 | 放在推理服务和应用案例中 |
-| 进阶参考 | `cann-ops-adv`、MindSpeed、MindSpeed-LLM、MindSpore、DVPP / AIPP | 放参考资料、扩展阅读或第二阶段案例 |
+| 进阶参考 | `cann-ops-adv`、MindSpeed、MindSpeed-LLM、MindSpore、DVPP / AIPP | 放在参考资料和扩展阅读中 |
 
 GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念、软件栈关系和常见报错索引里；`cann-ops-adv` 放在 Ascend C 之后，作为融合算子工程参考。
 
@@ -78,13 +51,13 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 | 目录 | 内容 | 说明 |
 |:---|:---|:---|
-| `docs/zh/00_environment` | 环境与版本基线 | 硬件检查、CANN 安装、`torch_npu` 验证、Docker 使用 |
-| `docs/zh/01_inference` | 模型推理与服务化 | Transformers、vLLM-Ascend、MindIE、benchmark；Qwen 主线 |
-| `docs/zh/02_finetune` | 微调与训练 | 数据、PEFT 原理、训练配置、权重合并、单卡 LoRA 实战 |
-| `docs/zh/03_profiling` | 性能分析 | PyTorch profiler、CANN profiling、msProf、热点定位、报告 |
-| `docs/zh/04_ascendc` | Ascend C 与自定义算子 | 五步入门、tiling、工程化、LLM 算子、模型接入 |
-| `docs/zh/05_cases` | 贯穿案例 | Qwen 训推优化、应用项目接入、案例报告 |
-| `docs/zh/06_reference` | 资料与排障 | 版本矩阵、FAQ、术语表、组件索引、链接索引 |
+| `docs/zh/00-environment` | 环境与版本基线 | 硬件检查、CANN 安装、`torch_npu` 验证、Docker 使用 |
+| `docs/zh/01-inference` | 模型推理与服务化 | Transformers、vLLM-Ascend、MindIE、benchmark；Qwen 主线 |
+| `docs/zh/02-fine-tune` | 微调与训练 | 数据、PEFT 原理、训练配置、权重合并、单卡 LoRA 实战 |
+| `docs/zh/03-profiling` | 性能分析 | PyTorch profiler、CANN profiling、msProf、热点定位、报告 |
+| `docs/zh/04-ascend-c` | Ascend C 与自定义算子 | 五步入门、tiling、工程化、LLM 算子、模型接入 |
+| `docs/zh/05-cases` | 贯穿案例 | Qwen 训推优化、应用项目接入、案例报告 |
+| `docs/zh/06-references` | 资料与排障 | 版本矩阵、FAQ、术语表、组件索引、链接索引 |
 | `cases/` | 可复现案例工程 | Qwen 主线工程、扩展模型工程 |
 | `src/` | 示例代码 | 每章可运行代码、算子工程、脚本 |
 | `notebooks/` | 交互式教程 | 适合 notebook 展示的章节和练习 |
@@ -109,20 +82,20 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 ## 详细章节
 
-### 00. Environment：先把机器变成可教学环境
+### 00. Environment：环境与版本基线
 
 > **验收目标**：跑完本章后，读者能判断自己的环境是否可以继续做后面的推理、微调和算子实验，并跑通最小 NPU 张量校验。
 
 **00.1 昇腾硬件与软件栈速览**
 - 学习目标：建立 NPU、驱动、固件、CANN、`torch_npu`、ACL、ATC/OM、GE、HCCL 之间的层次认知。
-- 主要产出：`docs/zh/00_environment/software-stack.md` + 一张软件栈关系图（`assets/00_environment/software-stack.{png,svg}`）。
+- 主要产出：`docs/zh/00-environment/software-stack.md` + 一张软件栈关系图（`assets/00-environment/software-stack.{png,svg}`）。
 - 前置依赖：无。
 - 验证方式：读者能口述「一段 Python 代码 → torch_npu → CANN runtime → driver → NPU」的调用链。
 - 写作要点：用一段 Python 推理代码串起「PyTorch → torch_npu → CANN runtime → driver → NPU」的调用链。
 
 **00.2 系统与硬件检查**
 - 学习目标：用 `npu-smi info`、驱动版本、CANN 路径、设备权限判断机器状态。
-- 主要产出：`environment-checklist.md` 和 `src/00_environment/check_environment.sh`。
+- 主要产出：`environment-checklist.md` 和 `src/00-environment/check_environment.sh`。
 - 前置依赖：00.1。
 - 验证方式：勾选清单全部通过。
 
@@ -153,7 +126,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - 前置依赖：00.2-00.4。
 - 验证方式：每条排障路径都给出「症状 → 原因 → 修复命令」三段式。
 
-> **00 章验收清单（嵌 index.md）**
+> **00 章验收清单（嵌 README.md）**
 > - [ ] 能用 `npu-smi info` 看到 NPU 并读懂输出。
 > - [ ] 已按实际路径加载 CANN 环境变量，或确认镜像已预置；`python -c "import torch_npu"` 不报错。
 > - [ ] `libhccl.so` 可以被动态链接器找到；如果失败，已记录实际路径和环境变量。
@@ -163,35 +136,34 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 ---
 
-### 01. Inference：把第一个大模型服务跑起来
+### 01. Inference：模型推理与服务化
 
-> **验收目标**：从命令行走到稳定 OpenAI 兼容服务，并留下可被 profiling 章复用的 baseline。
+> **验收目标**：完成单卡模型推理和一种服务化部署，保存 profiling 章需要的 baseline。
 
 **目录布局（主线集中 + 扩展按模型）**：
-- `docs/zh/01_inference/` 放 Qwen 主线（transformers / vllm / mindie / benchmark）。
-- 扩展模型（DeepSeek-R1-Distill、GLM、InternVL、Qwen-VL）放 `cases/<model>/`，索引挂在本章 index。
+- `docs/zh/01-inference/` 放 Qwen 主线（transformers / vllm / mindie / benchmark）。
+- 扩展模型（DeepSeek-R1-Distill、GLM、InternVL、Qwen-VL）放 `cases/<model>/`，索引挂在本章 README。
 
-**01.1 Transformers + torch_npu 最小推理**（已有）
+**01.1 Transformers + torch_npu 最小推理**（已实测）
 - 学习目标：在昇腾 NPU 上跑一次 Qwen 文本生成，得到输出、JSON 记录、可复跑命令。
 - 主要产出：`transformers-torch-npu.md` + `cases/qwen/scripts/run_transformers_torch_npu.py`（已有，保留）。
 - 前置依赖：00 章验收通过。
 - 验证方式：脚本输出 `tokens_per_second` + JSON 落盘到 `cases/qwen/results/`。
+- 实测记录：`cases/qwen/reports/inference-baseline-it22hmda.md`。当前数据为 `warmup=0`、`repeat=1` 的运行检查，正式 benchmark 另行记录。
 
 **01.2 vLLM-Ascend 服务化部署**
 - 学习目标：启动 OpenAI 兼容服务，记录显存占用、并发能力。
-- 主要产出：`vllm-ascend.md`（待实测后补启动命令）。
+- 主要产出：`vllm-ascend.md`。
 - 前置依赖：01.1。
 - 验证方式：`curl` 发 chat completions 请求拿到流式响应。
 - 写作要点：启动命令、`--port`、`--tensor-parallel-size`（单卡填 1）、显存占用对比表。
-- 第一轮边界：不作为阻塞项；先完成 Transformers baseline。
 
 **01.3 MindIE 部署**
 - 学习目标：了解生产推理的另一种选择，掌握配置文件和启动方式。
-- 主要产出：`mindie.md`（需确认获取方式和版本组合）。
+- 主要产出：`mindie.md`。
 - 前置依赖：01.1。
 - 验证方式：MindIE 服务起来，能响应请求。
 - 写作要点：与 vLLM-Ascend 的差异定位、适用场景、配置项说明。
-- 第一轮边界：与 vLLM-Ascend 二选一，等公开获取方式和版本组合确认后再进入主线。
 
 **01.4 推理扩展概念**
 - 学习目标：理解 batch、并发、显存占用、tensor parallel 与多卡场景的基本概念。
@@ -201,7 +173,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 **01.5 模型专题与扩展**
 - 学习目标：知道如何把主线方法迁移到其他模型。
-- 主要产出：本章 index 的「扩展模型」表 + 各 `cases/<model>/README.md`。
+- 主要产出：本章 README 的「扩展模型」表 + 各 `cases/<model>/README.md`。
 - 优先级：Qwen 系列主线 → DeepSeek-R1-Distill → GLM → InternVL/Qwen-VL（视机器条件）。
 
 **01.6 benchmark 模板**
@@ -209,18 +181,18 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - 主要产出：`benchmark.md` + `cases/qwen/scripts/benchmark.py`（新增脚本）。
 - 前置依赖：01.1。
 - 验证方式：产出标准 benchmark 表（模型 / 输入长度 / batch / 并发 / 吞吐 / 延迟 / 显存）。
-- 写作要点：区分本地脚本 benchmark 和服务化 benchmark；没有可比实验时，直接记录本次数据，不强行下结论。
+- 写作要点：区分脚本 benchmark 和服务化 benchmark；性能结论附带相同条件下的对比数据。
 
-> **01 章验收清单（嵌 index.md）**
-> - [ ] Transformers + torch_npu 跑通 Qwen 小模型，JSON 结果落盘。
+> **01 章验收清单（嵌 README.md）**
+> - [x] Transformers + torch_npu 跑通 Qwen 小模型，JSON 结果落盘。
 > - [ ] vLLM-Ascend 或 MindIE 至少一个服务化方案能响应 OpenAI 兼容请求。
 > - [ ] 有一份 benchmark 表，字段齐全（模型/输入/batch/并发/吞吐/延迟/显存）。
-> - [ ] baseline 命令可被 03 profiling 章直接复用。
-> - [ ] 显存占用有真实数据，不是估计值。
+> - [x] baseline 命令可被 03 profiling 章直接复用。
+> - [x] 显存占用有真实数据，不是估计值。
 
 ---
 
-### 02. Fine-tune：从能推理到能改模型
+### 02. Fine-tune：微调与训练
 
 > **验收目标**：跑通一次可复现的单卡 LoRA 微调，保存训练日志、权重和推理验证结果。
 
@@ -230,50 +202,51 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 **02.1 数据准备与格式**
 - 学习目标：理解 Alpaca / ShareGPT / 自定义 JSONL，会做训练/验证切分。
-- 主要产出：`dataset-format.md`（已有骨架，后续补样例）。
+- 主要产出：`dataset-format.md`。
 - 关键内容：Alpaca `instruction/input/output` 三字段；chat template 适配；`-100` label mask；MAX_LENGTH 截断。
 - 写作要点：把 prompt 拼接、label mask 和截断逻辑写清楚，代码要能直接复用。
 
 **02.2 PEFT 与 LoRA 原理**
 - 学习目标：理解全量微调 vs 高效微调、LoRA 低秩分解、`r`/`alpha`/`dropout` 参数含义。
-- 主要产出：`peft-principle.md`（新增）。
+- 主要产出：`peft-principle.md`。
 - 关键内容：`LoraConfig` 的 `target_modules`（Qwen 的 q/k/v/o/gate/up/down_proj）、`task_type=CAUSAL_LM`。
 
 **02.3 训练配置与 Trainer**
 - 学习目标：理解 `TrainingArguments` 的关键参数，会用 `Trainer` + `DataCollatorForSeq2Seq`。
-- 主要产出：`training-config.md`（新增）。
+- 主要产出：`training-config.md`。
 - 关键内容：`per_device_train_batch_size`、`gradient_accumulation_steps`、`gradient_checkpointing`、`logging_steps`、`save_steps`、`report_to`。
 - 边界：**单卡参数为主**，`save_on_each_node` 这种多机参数出现但不展开。
 
 **实战小节**
 
-**02.4 单卡 LoRA 实战（Qwen 主线）**
+**02.4 单卡 LoRA 实战（Qwen 主线，已实测）**
 - 学习目标：在昇腾 NPU 上完成一次 Qwen LoRA 微调，记录 batch、seq length、显存、loss。
-- 主要产出：`lora-single-card.md`（已有第一轮步骤）+ `cases/qwen/scripts/run_lora_sft.py`（新增脚本）+ `cases/qwen/configs/lora-sft.example.json`。
+- 主要产出：`lora-single-card.md` + `cases/qwen/scripts/run_lora_sft.py` + `cases/qwen/configs/lora-sft.example.json`。
 - 前置依赖：02.1-02.3。
 - 验证方式：训练正常出 loss 曲线，checkpoint 落盘，显存占用有记录。
+- 实测记录：`cases/qwen/reports/lora-sft-it22hmda.md`，包括 5 step 运行检查和 3 epoch 训练结果。
 
 **02.5 训练监控与日志**
 - 学习目标：用 SwanLab 记录 loss、吞吐、显存，保存训练日志。
 - 主要产出：`training-log.md`（已有骨架）+ SwanLab 接入说明。
 - 写作要点：训练监控先保证能记录 loss、耗时和显存；可视化平台作为可选项。
 
-**02.6 权重合并与推理验证**
+**02.6 权重合并与推理验证（已实测）**
 - 学习目标：合并 LoRA 权重回基座，用合并后的模型做推理验证。
-- 主要产出：`weight-merge.md`（新增）+ `cases/qwen/scripts/merge_lora.py`（新增脚本）。
-- 验证方式：合并前后输出对比，证明模型"学到了"任务（如角色扮演风格变化）。
+- 主要产出：`weight-merge.md` + `cases/qwen/scripts/merge_lora.py`。
+- 验证方式：adapter 能合并为完整模型，合并模型可以生成文本；训练效果使用独立问题另行比较。
 
 **02.7 多卡训练概念（只讲不做）**
 - 学习目标：知道 HCCL、进程启动方式、常见通信报错长什么样。
 - 主要产出：本章末尾小节 + 06 FAQ 索引。
 - 边界：**纯概念，无实战**，满足"不多卡实战"约束。
 
-> **02 章验收清单（嵌 index.md）**
+> **02 章验收清单（嵌 README.md）**
 > - [ ] 02.1-02.3 三篇原理小节能独立读懂，不依赖实战代码。
-> - [ ] 单卡 LoRA 训练跑通，loss 曲线、显存、checkpoint 都有记录。
-> - [ ] 权重合并脚本可用，合并后模型推理输出符合预期。
-> - [ ] 训练日志已落盘到 `cases/qwen/results/` 或 SwanLab。
-> - [ ] 全程单卡，未出现必须多卡才能复现的步骤。
+> - [x] 单卡 LoRA 训练跑通，loss、显存、checkpoint 都有记录。
+> - [x] 权重合并脚本可用，合并后模型可以完成推理。
+> - [x] 训练日志已落盘到 `cases/qwen/results/`，并整理到 `cases/qwen/reports/`。
+> - [x] 全程单卡，未出现必须多卡才能复现的步骤。
 
 ---
 
@@ -283,13 +256,13 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 **03.1 profiling 工具概览**
 - 学习目标：知道 PyTorch profiler、CANN profiling、msProf 各自的适用场景。
-- 主要产出：`profiling-quickstart.md`（已有第一轮步骤）。
+- 主要产出：`profiling-quickstart.md`。
 - 关键内容：三种工具的输入输出、适用阶段、产出格式对比表。
 
 **03.2 推理链路拆解**
 - 学习目标：拆解 prefill / decode / Host 下发 / Device 执行 / 数据搬运。
-- 主要产出：`inference-breakdown.md`（新增）+ 链路时序图（`assets/03_profiling/timeline.{png,svg}`）。
-- 写作要点：不要只贴截图，要解释时间主要花在哪里，以及这个结论还能不能复现。
+- 主要产出：`inference-breakdown.md`（新增）+ 链路时序图（`assets/03-profiling/timeline.{png,svg}`）。
+- 写作要点：截图附带关键耗时、输入条件和复现命令。
 
 **03.3 热点算子定位**
 - 学习目标：从 profile 结果里找耗时 top-N 算子，看调用次数、shape、format、内存读写。
@@ -312,7 +285,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - 主要产出：`report-template.md`（已有，需对齐字段）。
 - 验证方式：模板字段与 benchmark.md、case-report-template.md 一致。
 
-> **03 章验收清单（嵌 index.md）**
+> **03 章验收清单（嵌 README.md）**
 > - [ ] 至少用一种工具（PyTorch profiler / CANN profiling / msProf）跑出 profile 结果。
 > - [ ] 有一张推理链路时序图或截图。
 > - [ ] 产出热点算子表，标注 top-3 耗时算子。
@@ -333,7 +306,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 **04.2 Hello World：Host 调 Device**
 - 学习目标：跑通第一个 Ascend C 程序，理解 host 侧任务下发、device 侧执行。
-- 主要产出：`hello-world.md`（新增）+ `src/04_ascendc/hello_world/`。
+- 主要产出：`hello-world.md`（新增）+ `src/04-ascend-c/hello_world/`。
 - 写作要点：把 host 侧下发和 device 侧执行分开讲，避免把同步、异步和算子执行混在一起。
 
 **04.3 编程范式：CopyIn / Compute / CopyOut**
@@ -343,11 +316,11 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 **04.4 Tiling 入门**
 - 学习目标：理解为什么要 tiling、tiling 参数怎么选、与数据搬运的关系。
-- 主要产出：`tiling.md`（新增）+ tiling 决策图（`assets/04_ascendc/tiling-decision.{png,svg}`）。
+- 主要产出：`tiling.md`（新增）+ tiling 决策图（`assets/04-ascend-c/tiling-decision.{png,svg}`）。
 
 **04.5 Vector Add 完整实战**
 - 学习目标：跑通 Vector Add 的 host 侧、kernel 侧、编译、执行、正确性检查、profiling。
-- 主要产出：`vector-add.md`（已有第一轮编译步骤）+ `src/04_ascendc/vector_add/` 工程三件套。
+- 主要产出：`vector-add.md` + `src/04-ascend-c/vector_add/` 工程三件套。
 - 工程模板：`vector_add_kernel.cpp` + `vector_add_op.cpp`(aclnn) + `CMakeLists.txt`，由 msopgen 生成。
 - 验证方式：与 PyTorch 参考实现 `torch.allclose` 对比通过。
 
@@ -362,11 +335,11 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - 学习目标：从最小调用到模型链路中的算子替换。
 - 主要产出：`model-integration.md`（待算子实测后补）。
 - 关键技术：aclnn 调用、Python/C++ 封装、正确性测试；需要反向传播时再补 autograd。
-- 写作边界：具体接入方式以当前 CANN 9.0.0 环境实测结果为准，不提前承诺未验证 API。
+- 写作边界：具体接入方式以仓库版本矩阵中的实测组合为准。
 
 **04.8 LLM 常用算子的 CANN 实现**
 - 学习目标：从 PyTorch 参考实现出发，先完成 RMSNorm、Softmax 或 SiLU/SwiGLU 中的一个，再按实验进展扩展。
-- 主要产出：`llm-operators.md`（已有选题和记录模板）+ `src/04_ascendc/llm_ops/{rmsnorm,softmax,silu}/`。
+- 主要产出：`llm-operators.md`（已有选题和记录模板）+ `src/04-ascend-c/llm_ops/{rmsnorm,softmax,silu}/`。
 - 素材来源：`llm-algo-leetcode` 中的 PyTorch/Triton/CUDA 题目结构（不写 CUDA，只借题目和测试方式）。
 - 写作顺序建议：先 RMSNorm（最简单，规约+广播）→ Softmax（数值稳定性）→ SiLU/SwiGLU（接 Qwen FFN）。
 - 每个算子的标准记录表：算子名 / shape / dtype / PyTorch 耗时 / CANN 耗时 / 最大误差 / 平均误差 / profile 结论 / 是否接入模型。
@@ -379,7 +352,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - 学习目标：选择性阅读 `cann-ops-adv` 中的实现，看工程结构和优化思路。
 - 主要产出：`fused-operators.md`（新增，选读指引）。
 
-> **04 章验收清单（嵌 index.md）**
+> **04 章验收清单（嵌 README.md）**
 > - [ ] 跑通 Hello World 和 Vector Add 两个最小算子。
 > - [ ] 有一套标准算子工程模板（msopgen 生成，CMake 编译）。
 > - [ ] 至少完成一个 LLM 算子的 CANN 实现并通过正确性测试。
@@ -388,7 +361,7 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 ---
 
-### 05. Cases：把教程变成项目
+### 05. Cases：综合案例
 
 > **验收目标**：把环境、推理、微调、profiling、算子开发和模型接入整理成可展示、可复跑、可继续改的完整项目。
 
@@ -416,15 +389,14 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 
 - 应用指标表：首 token 延迟 / 单次响应耗时 / 应用任务耗时 / 模型调用次数 / 成功率 / 错误类型。
 
-**05.3 视觉/多模态拓展案例（可选，第二阶段）**
+**05.3 视觉/多模态拓展案例（选做）**
 - 案例 7 步同主线，模型换成视觉/视频/多模态。
-- 第一阶段先预留接口和记录模板。
 
 **05.4 案例报告模板**
 - 主要产出：`case-report-template.md`（已有模板，待实测后对齐字段）。
 - 字段与 benchmark.md、report-template.md 一致。
 
-> **05 章验收清单（嵌 index.md）**
+> **05 章验收清单（嵌 README.md）**
 > - [ ] Qwen 主线案例至少包含：1 次推理部署 + 1 次微调 + 1 次 profiling + 1 次算子开发或接入 + 1 次优化前后对比。
 > - [ ] 至少一个应用项目（hello-agent / hello-claw / torch-rechub）跑通并记录端到端耗时。
 > - [ ] 案例报告字段齐全，可被他人复跑。
@@ -457,9 +429,9 @@ GE 放在图编译、图优化和算子接入报错里；HCCL 放在通信概念
 - 主要产出：`links.md`（随引用持续补）。
 - 分类：官方文档 / 社区项目 / 算子竞赛。
 
-> **06 章验收清单（嵌 index.md）**
+> **06 章验收清单（嵌 README.md）**
 > - [ ] 版本矩阵覆盖课程用到的所有组件。
-> - [ ] FAQ 收录第一轮实验里真实遇到的问题，每条三段式。
+> - [ ] FAQ 收录实验里真实遇到的问题，每条三段式。
 > - [ ] 组件索引每个组件都有「是什么 / 在哪用 / 常见报错」三行说明。
 > - [ ] 术语表覆盖正文中出现的所有昇腾专有名词。
 > - [ ] 链接全部有效；失效、需登录或需额外权限的链接单独标注。

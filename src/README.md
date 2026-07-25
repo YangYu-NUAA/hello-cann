@@ -4,10 +4,10 @@
 
 | 目录 | 内容 |
 |:---|:---|
-| `00_environment` | 环境检查脚本 |
-| `01_inference` | 推理脚本 |
-| `02_finetune` | 微调脚本 |
-| `03_profiling` | profiling 脚本 |
-| `04_ascendc` | Ascend C 算子工程 |
-| `05_cases` | 贯穿案例代码 |
+| `00-environment` | 环境检查脚本 |
+| `01-inference` | 推理脚本 |
+| `02-fine-tune` | 微调脚本 |
+| `03-profiling` | profiling 脚本 |
+| `04-ascend-c` | Ascend C 算子工程 |
+| `05-cases` | 贯穿案例代码 |
 
