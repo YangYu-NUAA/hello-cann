@@ -35,7 +35,7 @@ cd hello-cann
 export MODEL_PATH=/path/to/Qwen2.5-0.5B-Instruct
 ```
 
-模型权重不纳入仓库。使用已下载的权重时在命令中加入 `--local-files-only`；也可以把 `--model` 设为 Hugging Face 模型名称。
+使用已下载的权重时在命令中加入 `--local-files-only`；也可以把 `--model` 设为 Hugging Face 模型名称。
 
 Notebook 和 Markdown 使用同一组脚本。Notebook 适合逐步执行，Markdown 适合在服务器终端中复制命令。
 
